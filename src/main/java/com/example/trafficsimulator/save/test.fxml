@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minHeight="400.0" minWidth="700.0" prefWidth="600.0" style="-fx-background-color: #666666;" stylesheets="@../../../../../resources/com/example/trafficsimulator/style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.trafficsimulator.Controller.MainController">
+    <children>
+        <GridPane maxWidth="250.0" prefHeight="400.0" prefWidth="250.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="350.0" AnchorPane.topAnchor="0.0">
+            <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+            </rowConstraints>
+            <children>
+                <StackPane maxWidth="250.0" prefWidth="250.0">
+                    <children>
+                        <TabPane maxWidth="250.0" prefWidth="250.0" tabClosingPolicy="UNAVAILABLE">
+                            <tabs>
+                                <Tab styleClass="tab-style" text="Items">
+                                    <content>
+                                        <FlowPane alignment="TOP_CENTER" prefHeight="357.0" prefWidth="233.0">
+                                            <children>
+                                                <Pane>
+                                                    <FlowPane.margin>
+                                                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                                    </FlowPane.margin>
+                                                    <children>
+                                                        <ImageView fitHeight="64.0" fitWidth="64.0" pickOnBounds="true" preserveRatio="true">
+                                                            <image>
+                                                                <Image url="@../../../../../resources/com/example/trafficsimulator/Images/road.png" />
+                                                            </image>
+                                                        </ImageView>
+                                                    </children>
+                                                </Pane>
+                                                <Pane>
+                                                    <FlowPane.margin>
+                                                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                                    </FlowPane.margin>
+                                                    <children>
+                                                        <ImageView fitHeight="64.0" fitWidth="64.0" pickOnBounds="true" preserveRatio="true">
+                                                            <image>
+                                                                <Image url="@../../../../../resources/com/example/trafficsimulator/Images/road.png" />
+                                                            </image>
+                                                        </ImageView>
+                                                    </children>
+                                                </Pane>
+                                            </children>
+                                        </FlowPane>
+                                    </content>
+                                </Tab>
+                                <Tab styleClass="tab-style" text="Stats">
+                                    <content>
+                                        <GridPane prefWidth="250.0">
+                                            <columnConstraints>
+                                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                            </columnConstraints>
+                                            <rowConstraints>
+                                                <RowConstraints maxHeight="200.0" vgrow="SOMETIMES" />
+                                                <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" prefHeight="40.0" vgrow="SOMETIMES" />
+                                            </rowConstraints>
+                                            <children>
+                                                <Button mnemonicParsing="false" styleClass="button-style" stylesheets="@../../../../../resources/com/example/trafficsimulator/style.css" text="Highlight Congestion" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.valignment="BOTTOM">
+                                                    <GridPane.margin>
+                                                        <Insets bottom="5.0" right="5.0" />
+                                                    </GridPane.margin>
+                                                </Button>
+                                                <TextArea styleClass="text-area" stylesheets="@../../../../../resources/com/example/trafficsimulator/style.css" text="Statistics of the Current Save File:&#10;&#10;Number of Vehicles:&#10;Number of Roads:&#10;Number of Intersections:&#10;&#10;Average Speed of Cars:&#10;Traffic Flow:&#10;" />
+                                            </children>
+                                        </GridPane>
+                                    </content>
+                                </Tab>
+                                <Tab styleClass="tab-style" text="Graph">
+                                    <content>
+                                        <GridPane prefHeight="357.0" prefWidth="197.0">
+                                            <columnConstraints>
+                                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                            </columnConstraints>
+                                            <rowConstraints>
+                                                <RowConstraints maxHeight="233.0" minHeight="10.0" prefHeight="233.0" vgrow="SOMETIMES" />
+                                                <RowConstraints maxHeight="174.0" minHeight="10.0" prefHeight="41.0" vgrow="SOMETIMES" />
+                                                <RowConstraints maxHeight="174.0" minHeight="10.0" prefHeight="124.0" vgrow="SOMETIMES" />
+                                            </rowConstraints>
+                                            <children>
+                                                <LineChart prefHeight="256.0" prefWidth="219.0">
+                                                    <xAxis>
+                                                        <CategoryAxis side="BOTTOM" />
+                                                    </xAxis>
+                                                    <yAxis>
+                                                        <NumberAxis side="LEFT" />
+                                                    </yAxis>
+                                                </LineChart>
+                                                <TextArea fx:id="graphTA" prefHeight="200.0" prefWidth="200.0" text="Current Traffic Flow:" GridPane.rowIndex="2">
+                                                    <GridPane.margin>
+                                                        <Insets top="20.0" />
+                                                    </GridPane.margin>
+                                                </TextArea>
+                                                <ComboBox fx:id="graphCB" onAction="#updateCB" prefHeight="25.0" prefWidth="288.0" GridPane.rowIndex="1">
+                                                    <GridPane.margin>
+                                                        <Insets left="5.0" right="5.0" />
+                                                    </GridPane.margin>
+                                                </ComboBox>
+                                            </children>
+                                        </GridPane>
+                                    </content>
+                                </Tab>
+                            </tabs>
+                        </TabPane>
+                    </children>
+                </StackPane>
+            </children>
+        </GridPane>
+        <Label alignment="CENTER" layoutX="185.0" layoutY="185.0" prefHeight="31.0" prefWidth="232.0" text="SIMULATION AREA">
+            <font>
+                <Font size="24.0" />
+            </font>
+        </Label>
+    </children>
+</AnchorPane>

@@ -50,4 +50,9 @@ public class Point {
         double mag = Math.sqrt(Math.pow(p.getX(), 2) + Math.pow(p.getY(), 2));
         return new Point (p.getX() / mag, p.getY() / mag);
     }
+
+    @Override
+    public String toString() {
+        return String.format("(%f, %f)", this.x, this.y);
+    }
 }

@@ -8,6 +8,8 @@ public class Truck extends Vehicle {
     }
 
     public Truck(Road road, double speed) {
+        super(road);
+
         this.road = road;
         this.speed = speed;
         this.name = "Truck";

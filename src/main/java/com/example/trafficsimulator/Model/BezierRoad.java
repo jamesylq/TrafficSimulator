@@ -53,6 +53,9 @@ public class BezierRoad extends Road {
         this.addCurve(weightStart);
         this.addCurve(weightEnd);
         this.addCurve(end.getCircleObj());
+
+        Car car = new Car(this);
+        calculateLength();
     }
 
     public void updateRender() {
@@ -195,5 +198,10 @@ public class BezierRoad extends Road {
             }
         }
         return null;
+    }
+
+    public double getAngle(double roadRelPos) {
+        Point p = derivative(roadRelPos);
+        return Math.atan2(p.getY(), p.getX());
     }
 }

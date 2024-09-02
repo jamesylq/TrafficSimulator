@@ -66,4 +66,6 @@ public abstract class Road implements Iterable {
     public abstract void iterate();
 
     public abstract double calculateLength();
+
+    public abstract double getAngle(double roadRelPos);
 }

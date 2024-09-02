@@ -8,6 +8,8 @@ public class TrafficLight extends RoadObject implements Iterable {
     private Road road;
 
     TrafficLight(Road road, Point point) {
+        super(road);
+
         this.road = road;
         this.point = point;
     }

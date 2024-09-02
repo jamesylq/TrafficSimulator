@@ -4,20 +4,22 @@ import com.example.trafficsimulator.Controller.MainController;
 import javafx.scene.image.ImageView;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public abstract class Vehicle extends RoadObject implements Iterable {
     protected String name;
-    protected double speed, roadRelPos;
-    protected Point pos;
+    protected double speed;
     protected Intersection target, prev, next;
+    public ImageView render;
 
-    protected Road road;
-    protected ImageView vehicle;
+    public static ArrayList<Vehicle> vehicleList = new ArrayList<>();
 
-    public static ArrayList<Vehicle> vehicleList;
+    Vehicle(Road road) {
+        super(road);
 
-    Vehicle() {
         vehicleList.add(this);
+        this.prev = this.road.start;
+        this.next = this.road.end;
     }
 
 
@@ -36,11 +38,27 @@ public abstract class Vehicle extends RoadObject implements Iterable {
                 this.findTarget();
             }
         }
+
+        updateRender();
+
+        System.out.println(this.roadRelPos + " " + this.getPoint());
     }
 
     public void findTarget() {
+        Random random = new Random();
+
+        if (target == null || target.index == prev.index) {
+            target = Intersection.intersectionList.get(random.nextInt(Intersection.intersectionList.size()));
+        }
+
         GraphEdge graphEdge = MainController.dp[prev.index][target.index];
         road = graphEdge.edge;
         next = graphEdge.adj;
+    }
+
+    public void updateRender() {
+        this.render.setX(this.getX());
+        this.render.setY(this.getY());
+        this.render.setRotate(this.road.getAngle(this.roadRelPos) * 180 / Math.PI);
     }
 }

@@ -197,6 +197,7 @@ public class MainController implements Initializable {
 
     public void updateLayers() {
         accordion.toFront();
+        for (Vehicle vehicle: Vehicle.vehicleList) vehicle.render.toFront();
         draggableNodesToFront();
     }
 
@@ -279,7 +280,7 @@ public class MainController implements Initializable {
         });
 
         try {
-            Thread.sleep(1000);
+            Thread.sleep(100);
             tick();
         } catch (InterruptedException ignored) {}
     }

@@ -7,7 +7,7 @@ import javafx.scene.shape.*;
 
 public abstract class Road implements Iterable {
     public ArrayList<Shape> curves = new ArrayList<>();
-    protected double speed, length;
+    protected double speed = 1.0, length, weight;
     protected Intersection start, end;
     public int numObstacles = 0;
     protected ArrayList<RoadObject> currObjects = new ArrayList<>();

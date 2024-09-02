@@ -88,6 +88,8 @@ public class LinearRoad extends Road {
     }
 
     public double calculateLength() {
-        return this.length = this.start.getPoint().getDistance(this.end.getPoint());
+        this.length = this.start.getPoint().getDistance(this.end.getPoint());
+        this.weight = this.length * this.speed;
+        return this.length;
     }
 }

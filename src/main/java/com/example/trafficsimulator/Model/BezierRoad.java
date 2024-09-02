@@ -2,7 +2,6 @@ package com.example.trafficsimulator.Model;
 
 import com.example.trafficsimulator.Controller.MainController;
 
-import javafx.event.ActionEvent;
 import javafx.scene.input.*;
 import javafx.scene.paint.*;
 import javafx.scene.shape.*;
@@ -183,7 +182,10 @@ public class BezierRoad extends Road {
             prev = curr;
         }
 
-        return this.length = len;
+        this.length = len;
+        this.weight = this.length * this.speed;
+
+        return this.length;
     }
 
     public static BezierRoad getBezierFromWeight(Circle weight) {

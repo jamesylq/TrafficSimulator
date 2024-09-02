@@ -3,6 +3,7 @@ package com.example.trafficsimulator.Controller;
 import com.example.trafficsimulator.MainApplication;
 import com.example.trafficsimulator.Model.*;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.*;
 import javafx.scene.*;
@@ -186,6 +187,12 @@ public class MainController implements Initializable {
                 }
             }
         });
+
+
+        Runnable simulation = this::tick;
+        Thread simulationThread = new Thread(simulation);
+        simulationThread.setDaemon(true);
+        simulationThread.start();
     }
 
     public void updateLayers() {
@@ -264,5 +271,16 @@ public class MainController implements Initializable {
         }
 
         System.out.println(Arrays.deepToString(dp));
+    }
+
+    public void tick() {
+        Platform.runLater(() -> {
+            for (Vehicle vehicle: Vehicle.vehicleList) vehicle.iterate();
+        });
+
+        try {
+            Thread.sleep(1000);
+            tick();
+        } catch (InterruptedException ignored) {}
     }
 }

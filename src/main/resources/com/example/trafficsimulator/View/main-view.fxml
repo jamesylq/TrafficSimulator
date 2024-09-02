@@ -25,9 +25,9 @@
 
 <AnchorPane fx:id="anchorPane" maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minHeight="400.0" minWidth="700.0" prefWidth="600.0" style="-fx-background-color: #666666;" stylesheets="@../style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.trafficsimulator.Controller.MainController">
    <children>
-      <Accordion fx:id="accordion" maxWidth="250.0" prefHeight="400.0" prefWidth="250.0" AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <Accordion fx:id="accordion" maxWidth="250.0" prefHeight="400.0" prefWidth="250.0" AnchorPane.bottomAnchor="15.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
         <panes>
-          <TitledPane animated="false" text="Menu">
+          <TitledPane text="Menu">
             <content>
                   <StackPane maxWidth="250.0" prefWidth="250.0">
                      <children>
@@ -195,11 +195,17 @@
             </content>
           </TitledPane>
         </panes>
-         <padding>
-            <Insets bottom="15.0" />
-         </padding>
       </Accordion>
       <ScrollBar prefHeight="15.0" prefWidth="700.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
       <ScrollBar layoutX="679.0" layoutY="174.0" orientation="VERTICAL" AnchorPane.bottomAnchor="15.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+      <Accordion layoutX="486.0" AnchorPane.bottomAnchor="15.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="0.0">
+        <panes>
+          <TitledPane animated="false" text="Selected">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="230.0" />
+            </content>
+          </TitledPane>
+        </panes>
+      </Accordion>
    </children>
 </AnchorPane>

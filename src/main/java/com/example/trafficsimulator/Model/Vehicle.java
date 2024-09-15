@@ -1,17 +1,14 @@
 package com.example.trafficsimulator.Model;
 
 import com.example.trafficsimulator.Controller.MainController;
-import javafx.scene.image.ImageView;
 
 import java.util.ArrayList;
 import java.util.Random;
 
 public abstract class Vehicle extends RoadObject implements Iterable {
     protected String name;
-    protected double speed;
+    protected double speed, WIDTH, HEIGHT;
     protected Intersection target, prev, next;
-    public ImageView render;
-
     public static ArrayList<Vehicle> vehicleList = new ArrayList<>();
 
     Vehicle(Road road) {
@@ -25,40 +22,42 @@ public abstract class Vehicle extends RoadObject implements Iterable {
 
     public void iterate() {
         double step = this.speed * road.speed / road.length;
-        if (this.next == this.road.end) {
-            this.roadRelPos += step;
-            if (this.roadRelPos >= 1) {
-                this.prev = this.next;
-                this.findTarget();
-            }
-        } else {
-            this.roadRelPos -= step;
-            if (this.roadRelPos <= 0) {
-                this.prev = this.next;
-                this.findTarget();
-            }
+
+        this.roadRelPos += flip() * step;
+        if (this.roadRelPos >= 1 || this.roadRelPos <= 0) {
+            this.prev = this.next;
+            this.findTarget();
         }
 
         updateRender();
-
-        System.out.println(this.roadRelPos + " " + this.getPoint());
     }
 
     public void findTarget() {
         Random random = new Random();
 
-        if (target == null || target.index == prev.index) {
+        while (target == null || target == prev) {
             target = Intersection.intersectionList.get(random.nextInt(Intersection.intersectionList.size()));
         }
 
         GraphEdge graphEdge = MainController.dp[prev.index][target.index];
         road = graphEdge.edge;
         next = graphEdge.adj;
+
+        roadRelPos = (road.start == next ? 1 : 0);
     }
 
     public void updateRender() {
-        this.render.setX(this.getX());
-        this.render.setY(this.getY());
+        Point der = this.road.derivative(this.roadRelPos);
+        double SIN = der.getY();
+        double COS = der.getX();
+
         this.render.setRotate(this.road.getAngle(this.roadRelPos) * 180 / Math.PI);
+
+        this.renderPane.setLayoutX(this.getX() - Math.max(WIDTH, HEIGHT) / 2 + SIN * (25 - HEIGHT / 2) * flip());
+        this.renderPane.setLayoutY(this.getY() - Math.max(WIDTH, HEIGHT) / 2 - COS * (25 - HEIGHT / 2) * flip());
+    }
+
+    public double flip() {
+        return (this.next == this.road.end ? 1.0 : -1.0);
     }
 }

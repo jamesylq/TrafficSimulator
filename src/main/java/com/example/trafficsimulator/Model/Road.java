@@ -2,6 +2,7 @@ package com.example.trafficsimulator.Model;
 
 import java.util.*;
 
+import com.example.trafficsimulator.Controller.MainController;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.*;
 
@@ -35,6 +36,10 @@ public abstract class Road implements Iterable {
 
     public void delete() {
         roadList.remove(this);
+        this.getStart().remove(this);
+        this.getEnd().remove(this);
+
+        MainController.mainAnchorPane.getChildren().removeAll(this.curves);
     }
 
     public void addCurve(Shape curve) {
@@ -47,6 +52,14 @@ public abstract class Road implements Iterable {
 
     public Intersection getEnd() {
         return this.end;
+    }
+
+    public void setStart(Intersection intersection) {
+        this.start = intersection;
+    }
+
+    public void setEnd(Intersection intersection) {
+        this.end = intersection;
     }
 
     public double getLength() {
@@ -68,4 +81,6 @@ public abstract class Road implements Iterable {
     public abstract double calculateLength();
 
     public abstract double getAngle(double roadRelPos);
+
+    public abstract Point derivative(double roadRelPos);
 }

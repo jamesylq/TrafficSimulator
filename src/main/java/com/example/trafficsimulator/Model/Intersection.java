@@ -39,11 +39,6 @@ public class Intersection {
         });
     }
 
-    public Intersection(Road road, Intersection intersection) {
-        this();
-        adjList.put(road, intersection);
-    }
-
     public void merge(Intersection intersection) {
         for (Map.Entry<Road, Intersection> adj: intersection.adjList.entrySet()) {
             Road road = adj.getKey();
@@ -62,6 +57,10 @@ public class Intersection {
 
         MainController.mainAnchorPane.getChildren().remove(intersection.getCircleObj());
         this.adjList.putAll(intersection.adjList);
+    }
+
+    public void add(Road road, Intersection intersection) {
+        this.adjList.put(road, intersection);
     }
 
     public double getX() {
@@ -135,5 +134,10 @@ public class Intersection {
     public void delete() {
         intersectionList.remove(this);
         MainController.mainAnchorPane.getChildren().remove(this.getCircleObj());
+    }
+
+    public void remove(Road road) {
+        this.adjList.remove(road);
+        if (this.adjList.isEmpty()) this.delete();
     }
 }

@@ -26,8 +26,8 @@ public class MainController implements Initializable {
     private TextArea graphTA;
 
     @FXML
-    private AnchorPane anchorPane;
-    public static AnchorPane mainAnchorPane;
+    private AnchorPane anchorPane, selectedAnchorPane;
+    public static AnchorPane mainAnchorPane, mainSelectedAnchorPane;
 
     @FXML
     private Accordion accordion;
@@ -38,6 +38,9 @@ public class MainController implements Initializable {
     @FXML
     private ImageView templateImg1, templateImg2, templateImg3;
 
+    @FXML
+    private Button disconnectBtn, deleteBtn;
+
     public static Stage aboutPage;
 
     public static GraphEdge[][] dp;
@@ -46,6 +49,8 @@ public class MainController implements Initializable {
 
     public static Road selectedRoad = null;
     public static Shape selectedHighlight = null;
+
+    private static final Random random = new Random();
 
     @FXML
     public void updateCB() {
@@ -56,6 +61,7 @@ public class MainController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         mainAnchorPane = anchorPane;
+        mainSelectedAnchorPane = selectedAnchorPane;
 
         graphCB.getItems().addAll(graphStats);
         graphCB.getSelectionModel().selectFirst();
@@ -135,8 +141,8 @@ public class MainController implements Initializable {
                         Intersection a = new Intersection(new Point(e.getX() - 50, e.getY()));
                         Intersection b = new Intersection(new Point(e.getX() + 50, e.getY()));
                         LinearRoad linearRoad = new LinearRoad(a, b);
-                        a.adjList.put(linearRoad, b);
-                        b.adjList.put(linearRoad, a);
+                        a.add(linearRoad, b);
+                        b.add(linearRoad, a);
 
                         anchorPane.getChildren().addAll(linearRoad.curves);
                         updateLayers();
@@ -155,8 +161,8 @@ public class MainController implements Initializable {
                         n.setStrokeWidth(5);
                         Intersection y = new Intersection(new Point(e.getX() + 50, e.getY() + 60));
                         BezierRoad bezierRoad = new BezierRoad(x, m, n, y);
-                        x.adjList.put(bezierRoad, y);
-                        y.adjList.put(bezierRoad, x);
+                        x.add(bezierRoad, y);
+                        y.add(bezierRoad, x);
 
                         anchorPane.getChildren().addAll(bezierRoad.curves);
                         updateLayers();
@@ -171,6 +177,7 @@ public class MainController implements Initializable {
 
                         for (Road road: node.adjList.keySet()) {
                             road.calculateLength();
+                            if (road.selected) SelectHandler.display();
                         }
 
                         if (closest != null && !closest.adjList.containsValue(node)) {
@@ -271,7 +278,55 @@ public class MainController implements Initializable {
             }
         }
 
-        System.out.println(Arrays.deepToString(dp));
+        for (int i = 0; i < 5; i++) {
+            new Car(Road.roadList.get(random.nextInt(Road.roadList.size())));
+        }
+    }
+
+    @FXML
+    public void disconnectSelected() {
+        if (selectedRoad == null) {
+            alertError("Invalid Operation!", "No road selected!", "Select a road by clicking on it!");
+            return;
+        }
+
+        if (selectedRoad.getStart().adjList.size() == 1 && selectedRoad.getEnd().adjList.size() == 1) {
+            alertError("Invalid Operation!", "The selected road is not connected to any other road!", "Use this operation on a road which is connected to at least 1 other road.");
+            return;
+        }
+
+        selectedRoad.getStart().remove(selectedRoad);
+        selectedRoad.getEnd().remove(selectedRoad);
+
+        Intersection start = new Intersection(selectedRoad.getPoint(selectedRoad.getStart().adjList.isEmpty() ? 0.0 : 0.1));
+        Intersection end = new Intersection(selectedRoad.getPoint(selectedRoad.getEnd().adjList.isEmpty() ? 1.0 : 0.9));
+
+        selectedRoad.setStart(start);
+        selectedRoad.setEnd(end);
+        start.add(selectedRoad, end);
+        end.add(selectedRoad, start);
+        selectedRoad.updateDrag();
+        anchorPane.getChildren().addAll(start.getCircleObj(), end.getCircleObj());
+        updateLayers();
+    }
+
+    @FXML
+    public void deleteSelected() {
+        selectedRoad.delete();
+        anchorPane.getChildren().remove(selectedHighlight);
+        anchorPane.getChildren().removeAll(SelectHandler.curves);
+
+        selectedRoad = null;
+        selectedHighlight = null;
+        SelectHandler.display();
+    }
+
+    private void alertError(String title, String header, String content) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 
     public void tick() {

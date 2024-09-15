@@ -54,7 +54,6 @@ public class BezierRoad extends Road {
         this.addCurve(weightEnd);
         this.addCurve(end.getCircleObj());
 
-        Car car = new Car(this);
         calculateLength();
     }
 
@@ -98,8 +97,8 @@ public class BezierRoad extends Road {
         B.setStrokeWidth(45);
         this.curves.set(1, B);
 
-        Point sDer = Point.normal(derivative(0));
-        Point eDer = Point.normal(derivative(1));
+        Point sDer = derivative(0);
+        Point eDer = derivative(1);
 
         CubicCurve C = new CubicCurve(
                 start.getX() - 5 * sDer.getX(), start.getY() - 5 * sDer.getY(),
@@ -141,26 +140,26 @@ public class BezierRoad extends Road {
 
     public Point getPoint(double t) {
         return new Point(
-                (1 - t) * (1 - t) * (1 - t) * start.getX() +
-                3 * (1 - t) * (1 - t) * t * weightStart.getCenterX() +
-                3 * (1 - t) * t * t * weightEnd.getCenterX() +
-                t * t * t * end.getX(),
-                (1 - t) * (1 - t) * (1 - t) * start.getY() +
-                3 * (1 - t) * (1 - t) * t * weightStart.getCenterY() +
-                3 * (1 - t) * t * t * weightEnd.getCenterY() +
-                t * t * t * end.getY()
+            (1 - t) * (1 - t) * (1 - t) * start.getX() +
+            3 * (1 - t) * (1 - t) * t * weightStart.getCenterX() +
+            3 * (1 - t) * t * t * weightEnd.getCenterX() +
+            t * t * t * end.getX(),
+            (1 - t) * (1 - t) * (1 - t) * start.getY() +
+            3 * (1 - t) * (1 - t) * t * weightStart.getCenterY() +
+            3 * (1 - t) * t * t * weightEnd.getCenterY() +
+            t * t * t * end.getY()
         );
     }
 
     public Point derivative(double t) {
-        return new Point(
-                3 * (1 - t) * (1 - t) * (weightStart.getCenterX() - start.getX()) +
-                6 * (1 - t) * t * (weightEnd.getCenterX() - weightStart.getCenterX()) +
-                3 * t * t * (end.getX() - weightEnd.getCenterX()),
-                3 * (1 - t) * (1 - t) * (weightStart.getCenterY() - start.getY()) +
-                6 * (1 - t) * t * (weightEnd.getCenterY() - weightStart.getCenterY()) +
-                3 * t * t * (end.getY() - weightEnd.getCenterY())
-        );
+        return Point.normal(new Point(
+            3 * (1 - t) * (1 - t) * (weightStart.getCenterX() - start.getX()) +
+            6 * (1 - t) * t * (weightEnd.getCenterX() - weightStart.getCenterX()) +
+            3 * t * t * (end.getX() - weightEnd.getCenterX()),
+            3 * (1 - t) * (1 - t) * (weightStart.getCenterY() - start.getY()) +
+            6 * (1 - t) * t * (weightEnd.getCenterY() - weightStart.getCenterY()) +
+            3 * t * t * (end.getY() - weightEnd.getCenterY())
+        ));
     }
 
     public void iterate() {
@@ -203,5 +202,12 @@ public class BezierRoad extends Road {
     public double getAngle(double roadRelPos) {
         Point p = derivative(roadRelPos);
         return Math.atan2(p.getY(), p.getX());
+    }
+
+    public void delete() {
+        super.delete();
+        bezierRoadList.remove(this);
+        weights.remove(weightStart);
+        weights.remove(weightEnd);
     }
 }

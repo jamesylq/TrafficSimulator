@@ -15,6 +15,10 @@ public class LinearRoad extends Road {
         calculateLength();
     }
 
+    public Point derivative(double t) {
+        return new Point(this.COS, this.SIN);
+    }
+
     public LinearRoad(Intersection start, Intersection end) {
         super(start, end);
         for (int i = 0; i < 4; i++) this.addCurve(null);

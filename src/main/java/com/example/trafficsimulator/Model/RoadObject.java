@@ -1,9 +1,14 @@
 package com.example.trafficsimulator.Model;
 
+import javafx.scene.image.*;
+import javafx.scene.layout.*;
+
 public class RoadObject {
     protected double roadRelPos = 0;
     protected Point point;
     protected Road road;
+    public ImageView render;
+    public FlowPane renderPane;
 
     RoadObject(Road road) {
         this.road = road;

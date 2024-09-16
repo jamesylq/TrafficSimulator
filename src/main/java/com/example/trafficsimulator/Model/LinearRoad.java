@@ -1,9 +1,8 @@
 package com.example.trafficsimulator.Model;
 
 import com.example.trafficsimulator.Controller.MainController;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.CubicCurve;
-import javafx.scene.shape.Line;
+import javafx.scene.paint.*;
+import javafx.scene.shape.*;
 
 public class LinearRoad extends Road {
     private double SIN, COS;
@@ -28,10 +27,6 @@ public class LinearRoad extends Road {
         this.addCurve(end.getCircleObj());
     }
 
-    public void iterate() {
-
-    }
-
     public void updateRender() {
         if (this.selected) {
             Line highlight = new Line(start.getX(), start.getY(), end.getX(), end.getY());
@@ -42,6 +37,8 @@ public class LinearRoad extends Road {
             }
             MainController.mainAnchorPane.getChildren().add(highlight);
             MainController.selectedHighlight = highlight;
+
+            for (BezierRoad road: BezierRoad.bezierRoadList) road.hideWeights();
         }
 
         normal();

@@ -1,6 +1,6 @@
 package com.example.trafficsimulator.Model;
 
-import javafx.scene.shape.Circle;
+import javafx.scene.shape.*;
 
 public class Point {
     private double x, y;

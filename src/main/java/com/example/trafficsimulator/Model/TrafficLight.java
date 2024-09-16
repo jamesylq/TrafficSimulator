@@ -1,7 +1,10 @@
 package com.example.trafficsimulator.Model;
 
+import java.util.*;
+
 public class TrafficLight extends RoadObject implements Iterable {
     public static final int RED = 0, YELLOW = 1, GREEN = 2;
+    public static ArrayList<TrafficLight> trafficLightList = new ArrayList<>();
 
     private int currState;
     private Point point;

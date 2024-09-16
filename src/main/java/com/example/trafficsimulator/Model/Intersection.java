@@ -1,19 +1,16 @@
 package com.example.trafficsimulator.Model;
 
 import com.example.trafficsimulator.Controller.MainController;
-import javafx.scene.input.ClipboardContent;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.TransferMode;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
+import javafx.scene.input.*;
+import javafx.scene.paint.*;
+import javafx.scene.shape.*;
 
 import java.util.*;
 
 public class Intersection {
     private Point point;
     private Circle circleObj;
-    private TrafficLight trafficLight;
+    private TrafficLight trafficLight = null;
     public int index = -1;
     public HashMap<Road, Intersection> adjList = new HashMap<>();
     public static ArrayList<Intersection> intersectionList = new ArrayList<>();
@@ -26,7 +23,7 @@ public class Intersection {
         this();
         this.point = new Point(point);
         this.circleObj = new Circle(point.getX(), point.getY(), 30);
-        this.circleObj.setFill(Color.TRANSPARENT);
+        this.circleObj.setFill(Color.BLUE);
 
         this.circleObj.setOnDragDetected(e -> {
             Dragboard db = this.circleObj.startDragAndDrop(TransferMode.MOVE);

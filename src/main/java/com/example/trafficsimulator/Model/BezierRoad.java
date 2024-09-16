@@ -73,6 +73,11 @@ public class BezierRoad extends Road {
             }
             MainController.mainAnchorPane.getChildren().add(highlight);
             MainController.selectedHighlight = highlight;
+
+            for (BezierRoad road: BezierRoad.bezierRoadList) road.hideWeights();
+
+            weightStart.setVisible(true);
+            weightEnd.setVisible(true);
         }
 
         CubicCurve A = new CubicCurve(
@@ -162,10 +167,6 @@ public class BezierRoad extends Road {
         ));
     }
 
-    public void iterate() {
-
-    }
-
     public Circle getWeightStart() {
         return this.weightStart;
     }
@@ -209,5 +210,10 @@ public class BezierRoad extends Road {
         bezierRoadList.remove(this);
         weights.remove(weightStart);
         weights.remove(weightEnd);
+    }
+
+    public void hideWeights() {
+        this.weightStart.setVisible(false);
+        this.weightEnd.setVisible(false);
     }
 }

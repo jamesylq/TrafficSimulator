@@ -3,7 +3,7 @@ package com.example.trafficsimulator.Model;
 import com.example.trafficsimulator.Controller.MainController;
 
 import javafx.event.*;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.input.*;
 import javafx.scene.shape.*;
 
 import java.util.*;

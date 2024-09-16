@@ -1,7 +1,7 @@
 package com.example.trafficsimulator.Model;
 
 public class Truck extends Vehicle {
-    static final double DEFAULT_SPEED = 7;
+    static final double DEFAULT_SPEED = 0.7;
 
     public Truck(Road road) {
         this(road, DEFAULT_SPEED);

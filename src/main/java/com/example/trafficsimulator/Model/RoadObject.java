@@ -3,7 +3,7 @@ package com.example.trafficsimulator.Model;
 import javafx.scene.image.*;
 import javafx.scene.layout.*;
 
-public class RoadObject {
+public class RoadObject implements Comparable<RoadObject> {
     protected double roadRelPos = 0;
     protected Point point;
     protected Road road;
@@ -15,13 +15,8 @@ public class RoadObject {
         this.getPoint();
     }
 
-    public void delete() {
-        road.removeObject(this);
-    }
-
     public Point getPoint() {
-        this.point = this.road.getPoint(this.roadRelPos);
-        return point;
+        return this.point = this.road.getPoint(this.roadRelPos);
     }
 
     public double getX() {
@@ -30,5 +25,10 @@ public class RoadObject {
 
     public double getY() {
         return this.getPoint().getY();
+    }
+
+    @Override
+    public int compareTo(RoadObject o) {
+        return (int) Math.signum(this.roadRelPos - o.roadRelPos);
     }
 }

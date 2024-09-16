@@ -2,8 +2,7 @@ package com.example.trafficsimulator.Model;
 
 import com.example.trafficsimulator.Controller.MainController;
 
-import java.util.ArrayList;
-import java.util.Random;
+import java.util.*;
 
 public abstract class Vehicle extends RoadObject implements Iterable {
     protected String name;
@@ -21,6 +20,8 @@ public abstract class Vehicle extends RoadObject implements Iterable {
 
 
     public void iterate() {
+//        getRoadObjects().ceiling(this);
+
         double step = this.speed * road.speed / road.length;
 
         this.roadRelPos += flip() * step;
@@ -40,10 +41,14 @@ public abstract class Vehicle extends RoadObject implements Iterable {
         }
 
         GraphEdge graphEdge = MainController.dp[prev.index][target.index];
+        getRoadObjects().remove(this);
         road = graphEdge.edge;
         next = graphEdge.adj;
+        getRoadObjects().add(this);
 
-        roadRelPos = (road.start == next ? 1 : 0);
+        roadRelPos = (isFwd() ? 0 : 1);
+
+        System.out.println(road.fwdObjects);
     }
 
     public void updateRender() {
@@ -57,7 +62,20 @@ public abstract class Vehicle extends RoadObject implements Iterable {
         this.renderPane.setLayoutY(this.getY() - Math.max(WIDTH, HEIGHT) / 2 - COS * (25 - HEIGHT / 2) * flip());
     }
 
+    public boolean isFwd() {
+        return (this.next == this.road.end);
+    }
+
     public double flip() {
-        return (this.next == this.road.end ? 1.0 : -1.0);
+        return (isFwd() ? 1.0 : -1.0);
+    }
+
+    public ArrayList<RoadObject> getRoadObjects() {
+        return (isFwd() ? road.fwdObjects : road.bckObjects);
+    }
+
+    @Override
+    public String toString() {
+        return Double.toString(this.roadRelPos);
     }
 }

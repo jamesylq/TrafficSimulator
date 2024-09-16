@@ -38,9 +38,6 @@ public class MainController implements Initializable {
     @FXML
     private ImageView templateImg1, templateImg2, templateImg3;
 
-    @FXML
-    private Button disconnectBtn, deleteBtn;
-
     public static Stage aboutPage;
 
     public static GraphEdge[][] dp;
@@ -114,7 +111,6 @@ public class MainController implements Initializable {
                         updateLayers();
                         source1.setCenterX(e.getX());
                         source1.setCenterY(e.getY());
-
                         break;
 
                     case "node":
@@ -164,6 +160,9 @@ public class MainController implements Initializable {
                         x.add(bezierRoad, y);
                         y.add(bezierRoad, x);
 
+                        m.setVisible(false);
+                        n.setVisible(false);
+
                         anchorPane.getChildren().addAll(bezierRoad.curves);
                         updateLayers();
 
@@ -181,6 +180,10 @@ public class MainController implements Initializable {
                         }
 
                         if (closest != null && !closest.adjList.containsValue(node)) {
+                            if (node.adjList.size() + closest.adjList.size() > 4) {
+                                alertError("Invalid Operation!", "Too many roads!", "Each intersection can have at most 4 roads.");
+                                break;
+                            }
                             closest.merge(node);
                             updateLayers();
                         }
@@ -278,6 +281,15 @@ public class MainController implements Initializable {
             }
         }
 
+        for (int i = 0; i < N; i++) {
+            for (int j = i + 1; j < N; j++) {
+                if (dp[i][j].dist == 1e9) {
+                    alertError("Error!", "Road Network Not Connected", "Ensure all roads are connected by at least one path!");
+                    return;
+                }
+            }
+        }
+
         for (int i = 0; i < 5; i++) {
             new Car(Road.roadList.get(random.nextInt(Road.roadList.size())));
         }
@@ -329,14 +341,39 @@ public class MainController implements Initializable {
         alert.showAndWait();
     }
 
-    public void tick() {
-        Platform.runLater(() -> {
-            for (Vehicle vehicle: Vehicle.vehicleList) vehicle.iterate();
-        });
+    @FXML
+    public void clearGraph() {
+        anchorPane.getChildren().removeAll(BezierRoad.weights);
+        for (Road road: Road.roadList) anchorPane.getChildren().removeAll(road.curves);
+        for (Vehicle vehicle: Vehicle.vehicleList) anchorPane.getChildren().removeAll(vehicle.render, vehicle.renderPane);
+        for (Intersection intersection: Intersection.intersectionList) anchorPane.getChildren().remove(intersection.getCircleObj());
 
+        Road.roadList.clear();
+        BezierRoad.weights.clear();
+        Vehicle.vehicleList.clear();
+        BezierRoad.bezierRoadList.clear();
+        Intersection.intersectionList.clear();
+
+        anchorPane.getChildren().remove(selectedHighlight);
+        selectedHighlight = null;
+        selectedRoad = null;
+        SelectHandler.display();
+    }
+
+    public void tick() {
         try {
-            Thread.sleep(100);
+            Platform.runLater(() -> {
+                for (Road road: Road.roadList) road.iterate();
+                for (Vehicle vehicle: Vehicle.vehicleList) {
+                    vehicle.iterate();
+                    vehicle.renderPane.toFront();
+                }
+                for (Intersection intersection: Intersection.intersectionList) intersection.getCircleObj().toFront();
+            });
+
+            Thread.sleep(10);
             tick();
+
         } catch (InterruptedException ignored) {}
     }
 }

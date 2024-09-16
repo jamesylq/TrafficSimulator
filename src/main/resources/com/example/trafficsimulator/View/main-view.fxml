@@ -58,7 +58,7 @@
                                                 <Insets left="10.0" right="10.0" />
                                              </GridPane.margin>
                                           </Button>
-                                          <Button mnemonicParsing="false" prefHeight="25.0" prefWidth="255.0" styleClass="button-style" text="Clear" GridPane.hgrow="ALWAYS" GridPane.rowIndex="3" GridPane.valignment="CENTER">
+                                          <Button mnemonicParsing="false" onAction="#clearGraph" prefHeight="25.0" prefWidth="255.0" styleClass="button-style" text="Clear" GridPane.hgrow="ALWAYS" GridPane.rowIndex="3" GridPane.valignment="CENTER">
                                              <GridPane.margin>
                                                 <Insets left="10.0" right="10.0" />
                                              </GridPane.margin>
@@ -214,12 +214,12 @@
                      </rowConstraints>
                      <children>
                     <AnchorPane fx:id="selectedAnchorPane" minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="230.0" />
-                        <Button fx:id="disconnectBtn" mnemonicParsing="false" onAction="#disconnectSelected" prefHeight="25.0" prefWidth="210.0" styleClass="button-style-2" text="Disconnect Road" GridPane.rowIndex="1">
+                        <Button mnemonicParsing="false" onAction="#disconnectSelected" prefHeight="25.0" prefWidth="210.0" styleClass="button-style-2" text="Disconnect Road" GridPane.rowIndex="1">
                            <GridPane.margin>
                               <Insets left="10.0" right="10.0" />
                            </GridPane.margin>
                         </Button>
-                        <Button fx:id="deleteBtn" mnemonicParsing="false" onAction="#deleteSelected" prefHeight="25.0" prefWidth="210.0" styleClass="button-style" text="Delete Road" GridPane.rowIndex="2">
+                        <Button mnemonicParsing="false" onAction="#deleteSelected" prefHeight="25.0" prefWidth="210.0" styleClass="button-style" text="Delete Road" GridPane.rowIndex="2">
                            <GridPane.margin>
                               <Insets left="10.0" right="10.0" />
                            </GridPane.margin>

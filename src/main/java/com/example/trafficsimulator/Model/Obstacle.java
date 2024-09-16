@@ -9,9 +9,7 @@ public class Obstacle extends RoadObject {
         this.road.numObstacles++;
     }
 
-    @Override
     public void delete() {
-        super.delete();
         this.road.numObstacles--;
     }
 }

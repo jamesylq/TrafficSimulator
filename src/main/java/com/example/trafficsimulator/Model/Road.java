@@ -3,7 +3,6 @@ package com.example.trafficsimulator.Model;
 import java.util.*;
 
 import com.example.trafficsimulator.Controller.MainController;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.*;
 
 public abstract class Road implements Iterable {
@@ -11,7 +10,7 @@ public abstract class Road implements Iterable {
     protected double speed = 1.0, length, weight;
     protected Intersection start, end;
     public int numObstacles = 0;
-    protected ArrayList<RoadObject> currObjects = new ArrayList<>();
+    public ArrayList<RoadObject> fwdObjects = new ArrayList<>(), bckObjects = new ArrayList<>();
     public static ArrayList<Road> roadList = new ArrayList<>();
     public boolean selected = false;
 
@@ -21,17 +20,8 @@ public abstract class Road implements Iterable {
 
     Road(Intersection start, Intersection end) {
         this();
-        this.currObjects = new ArrayList<>();
         this.start = start;
         this.end = end;
-    }
-
-    public void addObject(RoadObject roadObject) {
-        currObjects.add(roadObject);
-    }
-
-    public void removeObject(RoadObject roadObject) {
-        currObjects.remove(roadObject);
     }
 
     public void delete() {
@@ -70,13 +60,16 @@ public abstract class Road implements Iterable {
         return this.speed;
     }
 
+    public void iterate() {
+        fwdObjects.sort(Comparator.naturalOrder());
+        bckObjects.sort(Comparator.reverseOrder());
+    }
+
     public abstract Point getPoint(double roadRelPos);
 
     public abstract void updateDrag();
 
     public abstract void updateRender();
-
-    public abstract void iterate();
 
     public abstract double calculateLength();
 

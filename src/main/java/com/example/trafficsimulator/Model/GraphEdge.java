@@ -11,6 +11,10 @@ public class GraphEdge {
         this.adj = adj;
     }
 
+    public boolean isFwd() {
+        return (this.edge.end == this.adj);
+    }
+
     @Override
     public String toString() {
         return Double.toString(this.dist);

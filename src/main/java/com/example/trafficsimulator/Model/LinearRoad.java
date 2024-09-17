@@ -90,12 +90,16 @@ public class LinearRoad extends Road {
     }
 
     public double calculateLength() {
-        this.length = this.start.getPoint().getDistance(this.end.getPoint());
+        this.length = getDistance(0, 1);
         this.weight = this.length * this.speed;
         return this.length;
     }
 
     public double getAngle(double roadRelPos) {
         return Math.atan2(this.getEnd().getY() - this.getStart().getY(), this.getEnd().getX() - this.getStart().getX());
+    }
+
+    public double getDistance(double roadRelPos1, double roadRelPos2) {
+        return getPoint(roadRelPos1).getDistance(getPoint(roadRelPos2));
     }
 }

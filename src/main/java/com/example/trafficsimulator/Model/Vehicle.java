@@ -6,8 +6,8 @@ import java.util.*;
 
 public abstract class Vehicle extends RoadObject implements Iterable {
     protected String name;
-    protected double speed, WIDTH, HEIGHT;
-    protected Intersection target, prev, next;
+    protected double speed;
+    public Intersection target, prev, next;
     public static ArrayList<Vehicle> vehicleList = new ArrayList<>();
 
     Vehicle(Road road) {
@@ -20,9 +20,8 @@ public abstract class Vehicle extends RoadObject implements Iterable {
 
 
     public void iterate() {
-//        getRoadObjects().ceiling(this);
-
         double step = this.speed * road.speed / road.length;
+        if (target != null) step *= distanceFactor(getDistance(nextVehicle()));
 
         this.roadRelPos += flip() * step;
         if (this.roadRelPos >= 1 || this.roadRelPos <= 0) {
@@ -44,11 +43,14 @@ public abstract class Vehicle extends RoadObject implements Iterable {
         getRoadObjects().remove(this);
         road = graphEdge.edge;
         next = graphEdge.adj;
-        getRoadObjects().add(this);
 
-        roadRelPos = (isFwd() ? 0 : 1);
-
-        System.out.println(road.fwdObjects);
+        if (isFwd()) {
+            roadRelPos = 0;
+            road.fwdObjects.addFirst(this);
+        } else {
+            roadRelPos = 1;
+            road.bckObjects.add(this);
+        }
     }
 
     public void updateRender() {
@@ -58,8 +60,8 @@ public abstract class Vehicle extends RoadObject implements Iterable {
 
         this.render.setRotate(this.road.getAngle(this.roadRelPos) * 180 / Math.PI);
 
-        this.renderPane.setLayoutX(this.getX() - Math.max(WIDTH, HEIGHT) / 2 + SIN * (25 - HEIGHT / 2) * flip());
-        this.renderPane.setLayoutY(this.getY() - Math.max(WIDTH, HEIGHT) / 2 - COS * (25 - HEIGHT / 2) * flip());
+        this.renderPane.setLayoutX(this.getX() - MAXSIDE / 2 + SIN * (25 - HEIGHT / 2) * flip());
+        this.renderPane.setLayoutY(this.getY() - MAXSIDE / 2 - COS * (25 - HEIGHT / 2) * flip());
     }
 
     public boolean isFwd() {
@@ -72,6 +74,55 @@ public abstract class Vehicle extends RoadObject implements Iterable {
 
     public ArrayList<RoadObject> getRoadObjects() {
         return (isFwd() ? road.fwdObjects : road.bckObjects);
+    }
+
+    public Vehicle nextVehicle() {
+        GraphEdge graphEdge;
+        ArrayList<RoadObject> objList;
+        Intersection cur = this.prev;
+
+        while (cur != this.target) {
+            graphEdge = MainController.dp[cur.index][this.target.index];
+            cur = graphEdge.adj;
+            objList = (graphEdge.isFwd() ? graphEdge.edge.fwdObjects : graphEdge.edge.bckObjects);
+
+            int ind = objList.indexOf(this);
+            while (++ind < objList.size()) {
+                if (objList.get(ind) instanceof Vehicle vehicle) {
+                    return vehicle;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public double getDistance(Vehicle vehicle) {
+        if (vehicle == null) return Double.MAX_VALUE;
+        if (road == vehicle.road) return road.getDistance(roadRelPos, vehicle.roadRelPos);
+
+        double distance = road.getDistance(roadRelPos, isFwd() ? 1 : 0);
+
+        Road curRoad;
+        GraphEdge graphEdge;
+        Intersection cur = this.next;
+
+        do {
+            if (cur.index == this.target.index) throw new IllegalArgumentException("Vehicle not sighted!");
+
+            graphEdge = MainController.dp[cur.index][this.target.index];
+            curRoad = graphEdge.edge;
+            cur = graphEdge.adj;
+
+            distance += graphEdge.dist;
+
+        } while (curRoad != vehicle.road);
+
+        return distance + curRoad.getDistance(graphEdge.isFwd() ? 0 : 1, vehicle.roadRelPos);
+    }
+
+    public static double distanceFactor(double x) {
+        return Math.tanh(x / 100);
     }
 
     @Override

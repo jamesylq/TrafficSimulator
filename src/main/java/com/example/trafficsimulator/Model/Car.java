@@ -32,19 +32,9 @@ public class Car extends Vehicle {
         this.name = "Car";
 
         this.render = new ImageView(CAR_IMAGE);
-        this.renderPane = new FlowPane(this.render);
-        this.renderPane.setAlignment(Pos.CENTER);
-        this.renderPane.setMaxWidth(Math.max(WIDTH, HEIGHT));
-        this.renderPane.setMinWidth(Math.max(WIDTH, HEIGHT));
-        this.renderPane.setMaxHeight(Math.max(WIDTH, HEIGHT));
-        this.renderPane.setMinHeight(Math.max(WIDTH, HEIGHT));
+        initRenderPane();
 
         MainController.mainAnchorPane.getChildren().add(this.renderPane);
-        Circle x = new Circle(this.render.getX(), this.render.getY(), 1, Color.BLUE);
-        x.centerXProperty().bind(this.render.xProperty());
-        x.centerYProperty().bind(this.render.yProperty());
-        MainController.mainAnchorPane.getChildren().add(x);
-        BezierRoad.weights.add(x);
         updateRender();
     }
 }

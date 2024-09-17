@@ -14,6 +14,8 @@ public class SelectHandler implements EventHandler<MouseEvent> {
 
     @Override
     public void handle(MouseEvent e) {
+        if (MainController.isSimulating) return;
+
         Shape source = (Shape) e.getSource();
         for (Road road: Road.roadList) {
             if (road.curves.contains(source)) {
@@ -104,13 +106,19 @@ public class SelectHandler implements EventHandler<MouseEvent> {
         maxy = Math.max(maxy, y);
     }
 
+    public static double getScale() {
+        final double w = MainController.mainSelectedAnchorPane.getWidth();
+        final double h = MainController.mainSelectedAnchorPane.getHeight();
+        return Math.min(1, Math.min(w / (maxx - minx + 70), h / (maxy - miny + 90)));
+    }
+
     public static double scaleX(double x) {
         final double w = MainController.mainSelectedAnchorPane.getWidth();
-        double nx = (x - minx) / Math.max(maxx - minx, maxy - miny) * (w - 70);
-        return nx + (maxy - miny > maxx - minx ? (w - (maxx - minx) / (maxy - miny) * (w - 70)) / 2 : 35);
+        return (x - minx) * getScale() + (w - (maxx - minx) * getScale()) / 2;
     }
 
     public static double scaleY(double y) {
-        return (y - miny) / Math.max(maxx - minx, maxy - miny) * (MainController.mainSelectedAnchorPane.getWidth() - 50) + 50;
+        final double h = MainController.mainSelectedAnchorPane.getHeight();
+        return (y - miny) * getScale() + (h - (maxy - miny) * getScale()) / 2;
     }
 }

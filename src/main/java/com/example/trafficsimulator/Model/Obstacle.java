@@ -9,6 +9,10 @@ public class Obstacle extends RoadObject {
         this.road.numObstacles++;
     }
 
+    public void updateRender() {
+
+    }
+
     public void delete() {
         this.road.numObstacles--;
     }

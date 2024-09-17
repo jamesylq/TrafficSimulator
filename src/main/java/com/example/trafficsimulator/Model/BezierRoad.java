@@ -176,16 +176,7 @@ public class BezierRoad extends Road {
     }
 
     public double calculateLength() {
-        double len = 0;
-        Point prev = this.getStart().getPoint(), curr;
-
-        for (int i = 1; i <= APPROX_LENGTH_DIVISIONS; i++) {
-            curr = getPoint((double) i / APPROX_LENGTH_DIVISIONS);
-            len += prev.getDistance(curr);
-            prev = curr;
-        }
-
-        this.length = len;
+        this.length = getDistance(0, 1);
         this.weight = this.length * this.speed;
 
         return this.length;
@@ -215,5 +206,23 @@ public class BezierRoad extends Road {
     public void hideWeights() {
         this.weightStart.setVisible(false);
         this.weightEnd.setVisible(false);
+    }
+
+
+    public double getDistance(double roadRelPos1, double roadRelPos2) {
+        if (roadRelPos1 > roadRelPos2) {
+            return getDistance(roadRelPos2, roadRelPos1);
+        }
+
+        double len = 0;
+        Point prev = getPoint(roadRelPos1), curr;
+
+        for (int i = 1; i <= APPROX_LENGTH_DIVISIONS; i++) {
+            curr = getPoint((double) i / APPROX_LENGTH_DIVISIONS * (roadRelPos2 - roadRelPos1) + roadRelPos1);
+            len += prev.getDistance(curr);
+            prev = curr;
+        }
+
+        return len;
     }
 }

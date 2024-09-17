@@ -10,7 +10,7 @@ import java.util.*;
 public class Intersection {
     private Point point;
     private Circle circleObj;
-    private TrafficLight trafficLight = null;
+    public ArrayList<TrafficLight> trafficLights = new ArrayList<>();
     public int index = -1;
     public HashMap<Road, Intersection> adjList = new HashMap<>();
     public static ArrayList<Intersection> intersectionList = new ArrayList<>();
@@ -23,7 +23,7 @@ public class Intersection {
         this();
         this.point = new Point(point);
         this.circleObj = new Circle(point.getX(), point.getY(), 30);
-        this.circleObj.setFill(Color.BLUE);
+        this.circleObj.setFill(Color.TRANSPARENT);
 
         this.circleObj.setOnDragDetected(e -> {
             Dragboard db = this.circleObj.startDragAndDrop(TransferMode.MOVE);
@@ -37,6 +37,8 @@ public class Intersection {
     }
 
     public void merge(Intersection intersection) {
+        MainController.changeAllVehicleNode(intersection, this);
+
         for (Map.Entry<Road, Intersection> adj: intersection.adjList.entrySet()) {
             Road road = adj.getKey();
             Intersection adjInt = adj.getValue();
@@ -128,9 +130,27 @@ public class Intersection {
         return ans;
     }
 
+    public static Intersection closestIntersection(double maxDist, Point point) {
+        Intersection ans = null;
+        double currMin = Double.MAX_VALUE, curr;
+        for (Intersection intersection: intersectionList) {
+            if ((curr = intersection.getDistance(point)) < currMin && curr < maxDist) {
+                currMin = curr;
+                ans = intersection;
+            }
+        }
+        return ans;
+    }
+
     public void delete() {
         intersectionList.remove(this);
         MainController.mainAnchorPane.getChildren().remove(this.getCircleObj());
+
+        for (Vehicle vehicle: Vehicle.vehicleList) {
+            if (vehicle.target == this) {
+                vehicle.target = null;
+            }
+        }
     }
 
     public void remove(Road road) {

@@ -36,7 +36,10 @@ public class MainController implements Initializable {
     private Hyperlink aboutHL;
 
     @FXML
-    private ImageView templateImg1, templateImg2, templateImg3;
+    private ImageView templateImg1, templateImg2, templateImg3, templateImg4;
+
+    @FXML
+    private Button simulateBtn, disconnectRoadBtn, deleteRoadBtn;
 
     public static Stage aboutPage;
 
@@ -48,6 +51,8 @@ public class MainController implements Initializable {
     public static Shape selectedHighlight = null;
 
     private static final Random random = new Random();
+
+    public static boolean isSimulating = false;
 
     @FXML
     public void updateCB() {
@@ -93,6 +98,17 @@ public class MainController implements Initializable {
             ClipboardContent content = new ClipboardContent();
             content.putImage(templateImg2.getImage());
             content.putString("img2");
+            db.setContent(content);
+
+            e.consume();
+        });
+
+        templateImg4.setOnDragDetected(e -> {
+            Dragboard db = templateImg4.startDragAndDrop(TransferMode.COPY);
+
+            ClipboardContent content = new ClipboardContent();
+            content.putImage(templateImg4.getImage());
+            content.putString("img4");
             db.setContent(content);
 
             e.consume();
@@ -170,6 +186,18 @@ public class MainController implements Initializable {
                         e.consume();
                         break;
 
+                    case "img4":
+                        Intersection closestIntersect = Intersection.closestIntersection(50, new Point(e.getX(), e.getY()));
+                        if (closestIntersect != null) {
+                            for (Road adj: closestIntersect.adjList.keySet()) {
+                                new TrafficLight(adj, closestIntersect);
+                            }
+                        }
+
+                        e.setDropCompleted(true);
+                        e.consume();
+                        break;
+
                     case "node":
                         Intersection node = Intersection.getIntersectionFromCircle((Circle) e.getGestureSource());
                         Intersection closest = node.closestIntersection(50);
@@ -207,7 +235,8 @@ public class MainController implements Initializable {
 
     public void updateLayers() {
         accordion.toFront();
-        for (Vehicle vehicle: Vehicle.vehicleList) vehicle.render.toFront();
+        for (Vehicle vehicle: Vehicle.vehicleList) vehicle.renderPane.toFront();
+        for (TrafficLight trafficLight: TrafficLight.trafficLightList) trafficLight.renderPane.toFront();
         draggableNodesToFront();
     }
 
@@ -244,55 +273,87 @@ public class MainController implements Initializable {
     }
 
     @FXML
-    protected void beginSimulate() {
-        final int N = Intersection.intersectionList.size();
+    protected void toggleSimulate() {
+        if (isSimulating) {
+            simulateBtn.setText("Begin Simulation");
+            disconnectRoadBtn.setVisible(true);
+            deleteRoadBtn.setVisible(true);
 
-        dp = new GraphEdge[N][N];
-        for (int i = 0; i < N; i++) {
-            Intersection.intersectionList.get(i).index = i;
-
-            for (int j = 0; j < N; j++) {
-                if (i != j) {
-                    dp[i][j] = new GraphEdge(1e9, null, null);
-                } else {
-                    dp[i][j] = new GraphEdge(0, null, null);
-                }
+            for (Intersection intersection: Intersection.intersectionList) {
+                intersection.getCircleObj().setVisible(true);
             }
-        }
 
-        for (Road road: Road.roadList) {
-            int u = road.getStart().index;
-            int v = road.getEnd().index;
-            dp[u][v] = new GraphEdge(road.getLength(), road, road.getEnd());
-            dp[v][u] = new GraphEdge(road.getLength(), road, road.getStart());
-        }
+        } else {
+            final int N = Intersection.intersectionList.size();
 
-        for (int k = 0; k < N; k++) {
+            dp = new GraphEdge[N][N];
             for (int i = 0; i < N; i++) {
+                Intersection.intersectionList.get(i).index = i;
+
                 for (int j = 0; j < N; j++) {
-                    if (dp[i][j].dist > dp[i][k].dist + dp[k][j].dist) {
-                        dp[i][j] = new GraphEdge(
-                                dp[i][k].dist + dp[k][j].dist,
-                                dp[i][k].edge,
-                                dp[i][k].adj
-                        );
+                    if (i != j) {
+                        dp[i][j] = new GraphEdge(1e9, null, null);
+                    } else {
+                        dp[i][j] = new GraphEdge(0, null, null);
                     }
                 }
             }
-        }
 
-        for (int i = 0; i < N; i++) {
-            for (int j = i + 1; j < N; j++) {
-                if (dp[i][j].dist == 1e9) {
-                    alertError("Error!", "Road Network Not Connected", "Ensure all roads are connected by at least one path!");
-                    return;
+            for (Road road: Road.roadList) {
+                int u = road.getStart().index;
+                int v = road.getEnd().index;
+                dp[u][v] = new GraphEdge(road.getLength(), road, road.getEnd());
+                dp[v][u] = new GraphEdge(road.getLength(), road, road.getStart());
+            }
+
+            for (int k = 0; k < N; k++) {
+                for (int i = 0; i < N; i++) {
+                    for (int j = 0; j < N; j++) {
+                        if (dp[i][j].dist > dp[i][k].dist + dp[k][j].dist) {
+                            dp[i][j] = new GraphEdge(
+                                    dp[i][k].dist + dp[k][j].dist,
+                                    dp[i][k].edge,
+                                    dp[i][k].adj
+                            );
+                        }
+                    }
                 }
             }
+
+            for (int i = 0; i < N; i++) {
+                for (int j = i + 1; j < N; j++) {
+                    if (dp[i][j].dist == 1e9) {
+                        alertError("Error!", "Road Network Not Connected", "Ensure all roads are connected by at least one path!");
+                        return;
+                    }
+                }
+            }
+
+            for (int i = 0; i < 5; i++) {
+                new Car(Road.roadList.get(random.nextInt(Road.roadList.size())));
+            }
+
+            simulateBtn.setText("End Simulation");
+            disconnectRoadBtn.setVisible(false);
+            deleteRoadBtn.setVisible(false);
+
+            for (Intersection intersection: Intersection.intersectionList) {
+                intersection.getCircleObj().setVisible(false);
+            }
+
+            for (Circle circle: BezierRoad.weights) {
+                circle.setVisible(false);
+            }
+
+            anchorPane.getChildren().remove(selectedHighlight);
+            anchorPane.getChildren().removeAll(SelectHandler.curves);
+
+            selectedRoad = null;
+            selectedHighlight = null;
+            SelectHandler.display();
         }
 
-        for (int i = 0; i < 5; i++) {
-            new Car(Road.roadList.get(random.nextInt(Road.roadList.size())));
-        }
+        isSimulating = !isSimulating;
     }
 
     @FXML
@@ -310,8 +371,19 @@ public class MainController implements Initializable {
         selectedRoad.getStart().remove(selectedRoad);
         selectedRoad.getEnd().remove(selectedRoad);
 
+        while (!selectedRoad.getStart().trafficLights.isEmpty()) {
+            selectedRoad.getStart().trafficLights.getFirst().delete();
+        }
+
+        while (!selectedRoad.getEnd().trafficLights.isEmpty()) {
+            selectedRoad.getEnd().trafficLights.getFirst().delete();
+        }
+
         Intersection start = new Intersection(selectedRoad.getPoint(selectedRoad.getStart().adjList.isEmpty() ? 0.0 : 0.1));
         Intersection end = new Intersection(selectedRoad.getPoint(selectedRoad.getEnd().adjList.isEmpty() ? 1.0 : 0.9));
+
+        changeAllVehicleNode(selectedRoad.getStart(), start);
+        changeAllVehicleNode(selectedRoad.getEnd(), end);
 
         selectedRoad.setStart(start);
         selectedRoad.setEnd(end);
@@ -322,11 +394,41 @@ public class MainController implements Initializable {
         updateLayers();
     }
 
+    public static void changeAllVehicleNode(Intersection oldIntersection, Intersection newIntersection) {
+        for (Vehicle vehicle: Vehicle.vehicleList) {
+            if (vehicle.next == oldIntersection) vehicle.next = newIntersection;
+            if (vehicle.prev == oldIntersection) vehicle.prev = newIntersection;
+            if (vehicle.target == oldIntersection) vehicle.target = newIntersection;
+        }
+    }
+
     @FXML
     public void deleteSelected() {
         selectedRoad.delete();
         anchorPane.getChildren().remove(selectedHighlight);
         anchorPane.getChildren().removeAll(SelectHandler.curves);
+
+        for (RoadObject roadObject: selectedRoad.fwdObjects) {
+            if (roadObject instanceof Vehicle vehicle) {
+                anchorPane.getChildren().remove(vehicle.renderPane);
+                Vehicle.vehicleList.remove(vehicle);
+            }
+        }
+
+        for (RoadObject roadObject: selectedRoad.bckObjects) {
+            if (roadObject instanceof Vehicle vehicle) {
+                anchorPane.getChildren().remove(vehicle.renderPane);
+                Vehicle.vehicleList.remove(vehicle);
+            }
+        }
+
+        while (!selectedRoad.getStart().trafficLights.isEmpty()) {
+            selectedRoad.getStart().trafficLights.getFirst().delete();
+        }
+
+        while (!selectedRoad.getEnd().trafficLights.isEmpty()) {
+            selectedRoad.getEnd().trafficLights.getFirst().delete();
+        }
 
         selectedRoad = null;
         selectedHighlight = null;
@@ -345,8 +447,10 @@ public class MainController implements Initializable {
     public void clearGraph() {
         anchorPane.getChildren().removeAll(BezierRoad.weights);
         for (Road road: Road.roadList) anchorPane.getChildren().removeAll(road.curves);
-        for (Vehicle vehicle: Vehicle.vehicleList) anchorPane.getChildren().removeAll(vehicle.render, vehicle.renderPane);
+        for (Vehicle vehicle: Vehicle.vehicleList) anchorPane.getChildren().remove(vehicle.renderPane);
         for (Intersection intersection: Intersection.intersectionList) anchorPane.getChildren().remove(intersection.getCircleObj());
+
+        while (!TrafficLight.trafficLightList.isEmpty()) TrafficLight.trafficLightList.getFirst().delete();
 
         Road.roadList.clear();
         BezierRoad.weights.clear();
@@ -362,17 +466,25 @@ public class MainController implements Initializable {
 
     public void tick() {
         try {
-            Platform.runLater(() -> {
-                for (Road road: Road.roadList) road.iterate();
-                for (Vehicle vehicle: Vehicle.vehicleList) {
-                    vehicle.iterate();
-                    vehicle.renderPane.toFront();
-                }
-                for (Intersection intersection: Intersection.intersectionList) intersection.getCircleObj().toFront();
-            });
+            while (true) {
+                if (isSimulating) {
+                    Platform.runLater(() -> {
+                        for (Road road : Road.roadList) road.iterate();
+                        for (Vehicle vehicle : Vehicle.vehicleList) vehicle.iterate();
+                        for (TrafficLight trafficLight : TrafficLight.trafficLightList) trafficLight.iterate();
+                        updateLayers();
+                    });
 
-            Thread.sleep(10);
-            tick();
+                } else {
+                    Platform.runLater(() -> {
+                        for (Vehicle vehicle: Vehicle.vehicleList) vehicle.updateRender();
+                        for (TrafficLight trafficLight: TrafficLight.trafficLightList) trafficLight.updateRender();
+                        updateLayers();
+                    });
+                }
+
+                Thread.sleep(10);
+            }
 
         } catch (InterruptedException ignored) {}
     }

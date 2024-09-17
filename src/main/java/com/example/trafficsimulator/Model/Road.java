@@ -76,4 +76,6 @@ public abstract class Road implements Iterable {
     public abstract double getAngle(double roadRelPos);
 
     public abstract Point derivative(double roadRelPos);
+
+    public abstract double getDistance(double roadRelPos1, double roadRelPos2);
 }

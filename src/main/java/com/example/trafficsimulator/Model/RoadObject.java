@@ -1,10 +1,11 @@
 package com.example.trafficsimulator.Model;
 
+import javafx.geometry.Pos;
 import javafx.scene.image.*;
 import javafx.scene.layout.*;
 
-public class RoadObject implements Comparable<RoadObject> {
-    protected double roadRelPos = 0;
+public abstract class RoadObject implements Comparable<RoadObject> {
+    protected double roadRelPos = 0, WIDTH, HEIGHT, MAXSIDE;
     protected Point point;
     protected Road road;
     public ImageView render;
@@ -26,6 +27,18 @@ public class RoadObject implements Comparable<RoadObject> {
     public double getY() {
         return this.getPoint().getY();
     }
+
+    public void initRenderPane() {
+        this.renderPane = new FlowPane(this.render);
+        this.renderPane.setAlignment(Pos.CENTER);
+        this.renderPane.setMaxWidth(MAXSIDE = Math.max(WIDTH, HEIGHT));
+        this.renderPane.setMinWidth(MAXSIDE);
+        this.renderPane.setMaxHeight(MAXSIDE);
+        this.renderPane.setMinHeight(MAXSIDE);
+        this.renderPane.setMouseTransparent(true);
+    }
+
+    public abstract void updateRender();
 
     @Override
     public int compareTo(RoadObject o) {

@@ -41,13 +41,21 @@ public class MainController implements Initializable {
     @FXML
     private Button simulateBtn, disconnectRoadBtn, deleteRoadBtn;
 
+    @FXML
+    private Label settingL1, settingL2, settingL3, settingL4;
+    public static Label MSL1, MSL2, MSL3, MSL4;
+
+    @FXML
+    private Slider settingS1, settingS2, settingS3, settingS4;
+    public static Slider MSS1, MSS2, MSS3, MSS4;
+
     public static Stage aboutPage;
 
     public static GraphEdge[][] dp;
 
     final String[] graphStats = {"Traffic Flow", "Average Vehicle Speed"};
 
-    public static Road selectedRoad = null;
+    public static Selectable selectedNode = null;
     public static Shape selectedHighlight = null;
 
     private static final Random random = new Random();
@@ -64,16 +72,24 @@ public class MainController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         mainAnchorPane = anchorPane;
         mainSelectedAnchorPane = selectedAnchorPane;
+        MSL1 = settingL1;
+        MSL2 = settingL2;
+        MSL3 = settingL3;
+        MSL4 = settingL4;
+        MSS1 = settingS1;
+        MSS2 = settingS2;
+        MSS3 = settingS3;
+        MSS4 = settingS4;
 
         graphCB.getItems().addAll(graphStats);
         graphCB.getSelectionModel().selectFirst();
 
         anchorPane.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.ESCAPE) {
-                if (selectedRoad != null) {
-                    selectedRoad.selected = false;
+                if (selectedNode != null) {
+                    selectedNode.setSelect(false);
                     anchorPane.getChildren().remove(selectedHighlight);
-                    selectedRoad = null;
+                    selectedNode = null;
                     selectedHighlight = null;
                 }
             }
@@ -348,7 +364,7 @@ public class MainController implements Initializable {
             anchorPane.getChildren().remove(selectedHighlight);
             anchorPane.getChildren().removeAll(SelectHandler.curves);
 
-            selectedRoad = null;
+            selectedNode = null;
             selectedHighlight = null;
             SelectHandler.display();
         }
@@ -358,40 +374,42 @@ public class MainController implements Initializable {
 
     @FXML
     public void disconnectSelected() {
-        if (selectedRoad == null) {
+        if (selectedNode == null) {
             alertError("Invalid Operation!", "No road selected!", "Select a road by clicking on it!");
             return;
         }
 
-        if (selectedRoad.getStart().adjList.size() == 1 && selectedRoad.getEnd().adjList.size() == 1) {
-            alertError("Invalid Operation!", "The selected road is not connected to any other road!", "Use this operation on a road which is connected to at least 1 other road.");
-            return;
+        if (selectedNode instanceof Road selectedRoad) {
+            if (selectedRoad.getStart().adjList.size() == 1 && selectedRoad.getEnd().adjList.size() == 1) {
+                alertError("Invalid Operation!", "The selected road is not connected to any other road!", "Use this operation on a road which is connected to at least 1 other road.");
+                return;
+            }
+
+            selectedRoad.getStart().remove(selectedRoad);
+            selectedRoad.getEnd().remove(selectedRoad);
+
+            while (!selectedRoad.getStart().trafficLights.isEmpty()) {
+                selectedRoad.getStart().trafficLights.getFirst().delete();
+            }
+
+            while (!selectedRoad.getEnd().trafficLights.isEmpty()) {
+                selectedRoad.getEnd().trafficLights.getFirst().delete();
+            }
+
+            Intersection start = new Intersection(selectedRoad.getPoint(selectedRoad.getStart().adjList.isEmpty() ? 0.0 : 0.1));
+            Intersection end = new Intersection(selectedRoad.getPoint(selectedRoad.getEnd().adjList.isEmpty() ? 1.0 : 0.9));
+
+            changeAllVehicleNode(selectedRoad.getStart(), start);
+            changeAllVehicleNode(selectedRoad.getEnd(), end);
+
+            selectedRoad.setStart(start);
+            selectedRoad.setEnd(end);
+            start.add(selectedRoad, end);
+            end.add(selectedRoad, start);
+            selectedRoad.updateDrag();
+            anchorPane.getChildren().addAll(start.getCircleObj(), end.getCircleObj());
+            updateLayers();
         }
-
-        selectedRoad.getStart().remove(selectedRoad);
-        selectedRoad.getEnd().remove(selectedRoad);
-
-        while (!selectedRoad.getStart().trafficLights.isEmpty()) {
-            selectedRoad.getStart().trafficLights.getFirst().delete();
-        }
-
-        while (!selectedRoad.getEnd().trafficLights.isEmpty()) {
-            selectedRoad.getEnd().trafficLights.getFirst().delete();
-        }
-
-        Intersection start = new Intersection(selectedRoad.getPoint(selectedRoad.getStart().adjList.isEmpty() ? 0.0 : 0.1));
-        Intersection end = new Intersection(selectedRoad.getPoint(selectedRoad.getEnd().adjList.isEmpty() ? 1.0 : 0.9));
-
-        changeAllVehicleNode(selectedRoad.getStart(), start);
-        changeAllVehicleNode(selectedRoad.getEnd(), end);
-
-        selectedRoad.setStart(start);
-        selectedRoad.setEnd(end);
-        start.add(selectedRoad, end);
-        end.add(selectedRoad, start);
-        selectedRoad.updateDrag();
-        anchorPane.getChildren().addAll(start.getCircleObj(), end.getCircleObj());
-        updateLayers();
     }
 
     public static void changeAllVehicleNode(Intersection oldIntersection, Intersection newIntersection) {
@@ -404,35 +422,37 @@ public class MainController implements Initializable {
 
     @FXML
     public void deleteSelected() {
-        selectedRoad.delete();
-        anchorPane.getChildren().remove(selectedHighlight);
-        anchorPane.getChildren().removeAll(SelectHandler.curves);
+        if (selectedNode instanceof Road selectedRoad) {
+            selectedRoad.delete();
+            anchorPane.getChildren().remove(selectedHighlight);
+            anchorPane.getChildren().removeAll(SelectHandler.curves);
 
-        for (RoadObject roadObject: selectedRoad.fwdObjects) {
-            if (roadObject instanceof Vehicle vehicle) {
-                anchorPane.getChildren().remove(vehicle.renderPane);
-                Vehicle.vehicleList.remove(vehicle);
+            for (RoadObject roadObject: selectedRoad.fwdObjects) {
+                if (roadObject instanceof Vehicle vehicle) {
+                    anchorPane.getChildren().remove(vehicle.renderPane);
+                    Vehicle.vehicleList.remove(vehicle);
+                }
             }
-        }
 
-        for (RoadObject roadObject: selectedRoad.bckObjects) {
-            if (roadObject instanceof Vehicle vehicle) {
-                anchorPane.getChildren().remove(vehicle.renderPane);
-                Vehicle.vehicleList.remove(vehicle);
+            for (RoadObject roadObject: selectedRoad.bckObjects) {
+                if (roadObject instanceof Vehicle vehicle) {
+                    anchorPane.getChildren().remove(vehicle.renderPane);
+                    Vehicle.vehicleList.remove(vehicle);
+                }
             }
-        }
 
-        while (!selectedRoad.getStart().trafficLights.isEmpty()) {
-            selectedRoad.getStart().trafficLights.getFirst().delete();
-        }
+            while (!selectedRoad.getStart().trafficLights.isEmpty()) {
+                selectedRoad.getStart().trafficLights.getFirst().delete();
+            }
 
-        while (!selectedRoad.getEnd().trafficLights.isEmpty()) {
-            selectedRoad.getEnd().trafficLights.getFirst().delete();
-        }
+            while (!selectedRoad.getEnd().trafficLights.isEmpty()) {
+                selectedRoad.getEnd().trafficLights.getFirst().delete();
+            }
 
-        selectedRoad = null;
-        selectedHighlight = null;
-        SelectHandler.display();
+            selectedNode = null;
+            selectedHighlight = null;
+            SelectHandler.display();
+        }
     }
 
     private void alertError(String title, String header, String content) {
@@ -460,7 +480,7 @@ public class MainController implements Initializable {
 
         anchorPane.getChildren().remove(selectedHighlight);
         selectedHighlight = null;
-        selectedRoad = null;
+        selectedNode = null;
         SelectHandler.display();
     }
 
@@ -473,6 +493,7 @@ public class MainController implements Initializable {
                         for (Vehicle vehicle : Vehicle.vehicleList) vehicle.iterate();
                         for (TrafficLight trafficLight : TrafficLight.trafficLightList) trafficLight.iterate();
                         updateLayers();
+                        TrafficLight.globalTick = ++TrafficLight.globalTick % TrafficLight.TICK_CYCLE;
                     });
 
                 } else {

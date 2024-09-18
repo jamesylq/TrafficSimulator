@@ -3,6 +3,7 @@ package com.example.trafficsimulator.Model;
 import com.example.trafficsimulator.Controller.MainController;
 
 import javafx.event.*;
+import javafx.scene.image.*;
 import javafx.scene.input.*;
 import javafx.scene.shape.*;
 
@@ -14,82 +15,115 @@ public class SelectHandler implements EventHandler<MouseEvent> {
 
     @Override
     public void handle(MouseEvent e) {
-        if (MainController.isSimulating) return;
+        Object source = e.getSource();
 
-        Shape source = (Shape) e.getSource();
-        for (Road road: Road.roadList) {
-            if (road.curves.contains(source)) {
-                if (MainController.selectedRoad != null) {
-                    MainController.selectedRoad.selected = false;
-                    MainController.mainAnchorPane.getChildren().remove(MainController.selectedHighlight);
+        if (MainController.selectedNode != null) {
+            MainController.selectedNode.setSelect(false);
+            MainController.mainAnchorPane.getChildren().remove(MainController.selectedHighlight);
+        }
+
+        if (source instanceof Line || source instanceof CubicCurve) {
+            if (MainController.isSimulating) return;
+
+            for (Road road: Road.roadList) {
+                if (road.curves.contains(source)) {
+                    (MainController.selectedNode = (Selectable) road).setSelect(true);
+                    road.updateDrag();
+                    for (int i = 3; i >= 0; i--) road.curves.get(i).toBack();
+                    MainController.selectedHighlight.toBack();
+                    MainController.draggableNodesToFront();
+
+                    MainController.MSL1.setText("Road Speed");
+                    MainController.MSS1.setMin(0.1);
+                    MainController.MSS1.setMax(1);
+                    MainController.MSS1.setValue(road.speed);
+                    MainController.MSS1.setVisible(true);
+                    MainController.MSS2.setVisible(false);
+                    MainController.MSS3.setVisible(false);
+                    MainController.MSS4.setVisible(false);
+
+                    break;
                 }
-                MainController.selectedRoad = road;
-                road.selected = true;
-                road.updateDrag();
-                for (int i = 3; i >= 0; i--) road.curves.get(i).toBack();
-                MainController.selectedHighlight.toBack();
-                MainController.draggableNodesToFront();
-                break;
+            }
+
+            display();
+
+        } else if (source instanceof ImageView) {
+            for (TrafficLight trafficLight: TrafficLight.trafficLightList) {
+                if (trafficLight.render == source) {
+                    trafficLight.onSelect();
+                    trafficLight.setSelect(true);
+
+                    return;
+                }
+            }
+
+            for (Vehicle vehicle: Vehicle.vehicleList) {
+                if (vehicle.render == source) {
+//                    System.out.println("vehicle");
+                    return;
+                }
             }
         }
 
-        display();
     }
 
     public static void display() {
         for (Shape curve: curves) MainController.mainSelectedAnchorPane.getChildren().remove(curve);
         curves.clear();
 
-        if (MainController.selectedRoad == null) return;
+        if (MainController.selectedNode == null) return;
 
-        Shape mainCurve = MainController.selectedRoad.curves.getFirst();
-        
-        minx = Double.MAX_VALUE;
-        miny = Double.MAX_VALUE;
-        maxx = Double.MIN_VALUE;
-        maxy = Double.MIN_VALUE;
+        if (MainController.selectedNode instanceof Road selectedRoad) {
+            Shape mainCurve = selectedRoad.curves.getFirst();
 
-        if (mainCurve instanceof Line ln) {
-            addPoint(ln.getStartX(), ln.getStartY());
-            addPoint(ln.getEndX(), ln.getEndY());
+            minx = Double.MAX_VALUE;
+            miny = Double.MAX_VALUE;
+            maxx = Double.MIN_VALUE;
+            maxy = Double.MIN_VALUE;
 
-        } else if (mainCurve instanceof CubicCurve) {
-            for (int i = 0; i <= BezierRoad.APPROX_LENGTH_DIVISIONS; i++) {
-                addPoint(MainController.selectedRoad.getPoint((double) i / BezierRoad.APPROX_LENGTH_DIVISIONS));
-            }
-        }
+            if (mainCurve instanceof Line ln) {
+                addPoint(ln.getStartX(), ln.getStartY());
+                addPoint(ln.getEndX(), ln.getEndY());
 
-        if (mainCurve instanceof Line) {
-            for (Shape curve: MainController.selectedRoad.curves) {
-                if (curve instanceof Line ln) {
-                    Line newCurve = new Line(
-                        scaleX(ln.getStartX()), scaleY(ln.getStartY()),
-                        scaleX(ln.getEndX()), scaleY(ln.getEndY())
-                    );
-                    newCurve.setFill(curve.getFill());
-                    newCurve.setStroke(curve.getStroke());
-                    newCurve.setStyle(curve.getStyle());
-                    newCurve.setStrokeWidth(curve.getStrokeWidth());
-                    MainController.mainSelectedAnchorPane.getChildren().add(newCurve);
-                    curves.add(newCurve);
+            } else if (mainCurve instanceof CubicCurve) {
+                for (int i = 0; i <= BezierRoad.APPROX_LENGTH_DIVISIONS; i++) {
+                    addPoint(selectedRoad.getPoint((double) i / BezierRoad.APPROX_LENGTH_DIVISIONS));
                 }
             }
 
-        } else if (mainCurve instanceof CubicCurve) {
-            for (Shape curve: MainController.selectedRoad.curves) {
-                if (curve instanceof CubicCurve cc) {
-                    CubicCurve newCurve = new CubicCurve(
-                        scaleX(cc.getStartX()), scaleY(cc.getStartY()),
-                        scaleX(cc.getControlX1()), scaleY(cc.getControlY1()),
-                        scaleX(cc.getControlX2()), scaleY(cc.getControlY2()),
-                        scaleX(cc.getEndX()), scaleY(cc.getEndY())
-                    );
-                    newCurve.setFill(curve.getFill());
-                    newCurve.setStroke(curve.getStroke());
-                    newCurve.setStyle(curve.getStyle());
-                    newCurve.setStrokeWidth(curve.getStrokeWidth());
-                    MainController.mainSelectedAnchorPane.getChildren().add(newCurve);
-                    curves.add(newCurve);
+            if (mainCurve instanceof Line) {
+                for (Shape curve: selectedRoad.curves) {
+                    if (curve instanceof Line ln) {
+                        Line newCurve = new Line(
+                                scaleX(ln.getStartX()), scaleY(ln.getStartY()),
+                                scaleX(ln.getEndX()), scaleY(ln.getEndY())
+                        );
+                        newCurve.setFill(curve.getFill());
+                        newCurve.setStroke(curve.getStroke());
+                        newCurve.setStyle(curve.getStyle());
+                        newCurve.setStrokeWidth(curve.getStrokeWidth());
+                        MainController.mainSelectedAnchorPane.getChildren().add(newCurve);
+                        curves.add(newCurve);
+                    }
+                }
+
+            } else if (mainCurve instanceof CubicCurve) {
+                for (Shape curve: selectedRoad.curves) {
+                    if (curve instanceof CubicCurve cc) {
+                        CubicCurve newCurve = new CubicCurve(
+                                scaleX(cc.getStartX()), scaleY(cc.getStartY()),
+                                scaleX(cc.getControlX1()), scaleY(cc.getControlY1()),
+                                scaleX(cc.getControlX2()), scaleY(cc.getControlY2()),
+                                scaleX(cc.getEndX()), scaleY(cc.getEndY())
+                        );
+                        newCurve.setFill(curve.getFill());
+                        newCurve.setStroke(curve.getStroke());
+                        newCurve.setStyle(curve.getStyle());
+                        newCurve.setStrokeWidth(curve.getStrokeWidth());
+                        MainController.mainSelectedAnchorPane.getChildren().add(newCurve);
+                        curves.add(newCurve);
+                    }
                 }
             }
         }

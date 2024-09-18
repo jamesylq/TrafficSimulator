@@ -4,11 +4,12 @@ import com.example.trafficsimulator.Controller.MainController;
 
 import java.util.*;
 
-public abstract class Vehicle extends RoadObject implements Iterable {
+public abstract class Vehicle extends RoadObject implements Iterable, Selectable {
     protected String name;
     protected double speed;
     public Intersection target, prev, next;
     public static ArrayList<Vehicle> vehicleList = new ArrayList<>();
+    public boolean selected;
 
     Vehicle(Road road) {
         super(road);
@@ -21,7 +22,7 @@ public abstract class Vehicle extends RoadObject implements Iterable {
 
     public void iterate() {
         double step = this.speed * road.speed / road.length;
-        if (target != null) step *= distanceFactor(getDistance(nextVehicle()));
+        if (target != null) step *= distanceFactor(getDistance(nextCollidable()));
 
         this.roadRelPos += flip() * step;
         if (this.roadRelPos >= 1 || this.roadRelPos <= 0) {
@@ -76,8 +77,9 @@ public abstract class Vehicle extends RoadObject implements Iterable {
         return (isFwd() ? road.fwdObjects : road.bckObjects);
     }
 
-    public Vehicle nextVehicle() {
+    public RoadObject nextCollidable() {
         GraphEdge graphEdge;
+        RoadObject current;
         ArrayList<RoadObject> objList;
         Intersection cur = this.prev;
 
@@ -88,8 +90,8 @@ public abstract class Vehicle extends RoadObject implements Iterable {
 
             int ind = objList.indexOf(this);
             while (++ind < objList.size()) {
-                if (objList.get(ind) instanceof Vehicle vehicle) {
-                    return vehicle;
+                if ((current = objList.get(ind)).collidable) {
+                    return current;
                 }
             }
         }
@@ -97,9 +99,26 @@ public abstract class Vehicle extends RoadObject implements Iterable {
         return null;
     }
 
-    public double getDistance(Vehicle vehicle) {
-        if (vehicle == null) return Double.MAX_VALUE;
-        if (road == vehicle.road) return road.getDistance(roadRelPos, vehicle.roadRelPos);
+//    public RoadObject nextObject() {
+//        GraphEdge graphEdge;
+//        ArrayList<RoadObject> objList;
+//        Intersection cur = this.prev;
+//
+//        while (cur != this.target) {
+//            graphEdge = MainController.dp[cur.index][this.target.index];
+//            cur = graphEdge.adj;
+//            objList = (graphEdge.isFwd() ? graphEdge.edge.fwdObjects : graphEdge.edge.bckObjects);
+//
+//            int ind = objList.indexOf(this);
+//            if (++ind < objList.size()) return objList.get(ind);
+//        }
+//
+//        return null;
+//    }
+
+    public double getDistance(RoadObject roadObject) {
+        if (roadObject == null) return Double.MAX_VALUE;
+        if (road == roadObject.road) return road.getDistance(roadRelPos, roadObject.roadRelPos);
 
         double distance = road.getDistance(roadRelPos, isFwd() ? 1 : 0);
 
@@ -108,7 +127,7 @@ public abstract class Vehicle extends RoadObject implements Iterable {
         Intersection cur = this.next;
 
         do {
-            if (cur.index == this.target.index) throw new IllegalArgumentException("Vehicle not sighted!");
+            if (cur.index == this.target.index) throw new IllegalArgumentException("Object not sighted!");
 
             graphEdge = MainController.dp[cur.index][this.target.index];
             curRoad = graphEdge.edge;
@@ -116,17 +135,29 @@ public abstract class Vehicle extends RoadObject implements Iterable {
 
             distance += graphEdge.dist;
 
-        } while (curRoad != vehicle.road);
+        } while (curRoad != roadObject.road);
 
-        return distance + curRoad.getDistance(graphEdge.isFwd() ? 0 : 1, vehicle.roadRelPos);
+        return distance + curRoad.getDistance(graphEdge.isFwd() ? 0 : 1, roadObject.roadRelPos);
     }
 
     public static double distanceFactor(double x) {
-        return Math.tanh(x / 100);
+        return Math.max(0, 1 / (1 + Math.pow(Math.E, -0.1 * (x - 50))) - 0.08);
     }
 
     @Override
     public String toString() {
         return Double.toString(this.roadRelPos);
+    }
+
+    public void setSelect(boolean b) {
+        selected = b;
+    }
+
+    public boolean getSelect() {
+        return selected;
+    }
+
+    public void onSelect() {
+
     }
 }

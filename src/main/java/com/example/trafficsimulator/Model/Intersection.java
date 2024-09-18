@@ -23,7 +23,7 @@ public class Intersection {
         this();
         this.point = new Point(point);
         this.circleObj = new Circle(point.getX(), point.getY(), 30);
-        this.circleObj.setFill(Color.TRANSPARENT);
+        this.circleObj.setFill(Color.TRANSPARENT);  //TODO
 
         this.circleObj.setOnDragDetected(e -> {
             Dragboard db = this.circleObj.startDragAndDrop(TransferMode.MOVE);

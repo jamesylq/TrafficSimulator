@@ -4,7 +4,7 @@ import com.example.trafficsimulator.Controller.MainController;
 import javafx.scene.paint.*;
 import javafx.scene.shape.*;
 
-public class LinearRoad extends Road {
+public class LinearRoad extends Road implements Selectable {
     private double SIN, COS;
 
     public void normal() {
@@ -28,18 +28,7 @@ public class LinearRoad extends Road {
     }
 
     public void updateRender() {
-        if (this.selected) {
-            Line highlight = new Line(start.getX(), start.getY(), end.getX(), end.getY());
-            highlight.setStroke(Color.AQUA);
-            highlight.setStrokeWidth(55);
-            if (MainController.selectedHighlight != null) {
-                MainController.mainAnchorPane.getChildren().remove(MainController.selectedHighlight);
-            }
-            MainController.mainAnchorPane.getChildren().add(highlight);
-            MainController.selectedHighlight = highlight;
-
-            for (BezierRoad road: BezierRoad.bezierRoadList) road.hideWeights();
-        }
+        if (this.selected) onSelect();
 
         normal();
 
@@ -101,5 +90,26 @@ public class LinearRoad extends Road {
 
     public double getDistance(double roadRelPos1, double roadRelPos2) {
         return getPoint(roadRelPos1).getDistance(getPoint(roadRelPos2));
+    }
+
+    public void onSelect() {
+        Line highlight = new Line(start.getX(), start.getY(), end.getX(), end.getY());
+        highlight.setStroke(Color.AQUA);
+        highlight.setStrokeWidth(55);
+        if (MainController.selectedHighlight != null) {
+            MainController.mainAnchorPane.getChildren().remove(MainController.selectedHighlight);
+        }
+        MainController.mainAnchorPane.getChildren().add(highlight);
+        MainController.selectedHighlight = highlight;
+
+        for (BezierRoad road: BezierRoad.bezierRoadList) road.hideWeights();
+    }
+
+    public void setSelect(boolean b) {
+        selected = b;
+    }
+
+    public boolean getSelect() {
+        return selected;
     }
 }

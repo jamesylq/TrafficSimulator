@@ -8,7 +8,7 @@ import javafx.scene.shape.*;
 
 import java.util.*;
 
-public class BezierRoad extends Road {
+public class BezierRoad extends Road implements Selectable {
     private Circle weightStart, weightEnd;
     public static ArrayList<Circle> weights = new ArrayList<>();
     public static ArrayList<BezierRoad> bezierRoadList = new ArrayList<>();
@@ -58,27 +58,7 @@ public class BezierRoad extends Road {
     }
 
     public void updateRender() {
-        if (this.selected) {
-            CubicCurve highlight = new CubicCurve(
-                    start.getX(), start.getY(),
-                    weightStart.getCenterX(), weightStart.getCenterY(),
-                    weightEnd.getCenterX(), weightEnd.getCenterY(),
-                    end.getX(), end.getY()
-            );
-            highlight.setFill(Color.TRANSPARENT);
-            highlight.setStroke(Color.AQUA);
-            highlight.setStrokeWidth(55);
-            if (MainController.selectedHighlight != null) {
-                MainController.mainAnchorPane.getChildren().remove(MainController.selectedHighlight);
-            }
-            MainController.mainAnchorPane.getChildren().add(highlight);
-            MainController.selectedHighlight = highlight;
-
-            for (BezierRoad road: BezierRoad.bezierRoadList) road.hideWeights();
-
-            weightStart.setVisible(true);
-            weightEnd.setVisible(true);
-        }
+        if (this.selected) onSelect();
 
         CubicCurve A = new CubicCurve(
                 start.getX(), start.getY(),
@@ -224,5 +204,35 @@ public class BezierRoad extends Road {
         }
 
         return len;
+    }
+
+    public void onSelect() {
+        CubicCurve highlight = new CubicCurve(
+                start.getX(), start.getY(),
+                weightStart.getCenterX(), weightStart.getCenterY(),
+                weightEnd.getCenterX(), weightEnd.getCenterY(),
+                end.getX(), end.getY()
+        );
+        highlight.setFill(Color.TRANSPARENT);
+        highlight.setStroke(Color.AQUA);
+        highlight.setStrokeWidth(55);
+        if (MainController.selectedHighlight != null) {
+            MainController.mainAnchorPane.getChildren().remove(MainController.selectedHighlight);
+        }
+        MainController.mainAnchorPane.getChildren().add(highlight);
+        MainController.selectedHighlight = highlight;
+
+        for (BezierRoad road: BezierRoad.bezierRoadList) road.hideWeights();
+
+        weightStart.setVisible(true);
+        weightEnd.setVisible(true);
+    }
+
+    public void setSelect(boolean b) {
+        selected = b;
+    }
+
+    public boolean getSelect() {
+        return selected;
     }
 }

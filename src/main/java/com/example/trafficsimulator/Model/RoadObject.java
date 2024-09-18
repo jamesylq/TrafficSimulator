@@ -6,6 +6,7 @@ import javafx.scene.layout.*;
 
 public abstract class RoadObject implements Comparable<RoadObject> {
     protected double roadRelPos = 0, WIDTH, HEIGHT, MAXSIDE;
+    public boolean collidable = true;
     protected Point point;
     protected Road road;
     public ImageView render;
@@ -35,7 +36,7 @@ public abstract class RoadObject implements Comparable<RoadObject> {
         this.renderPane.setMinWidth(MAXSIDE);
         this.renderPane.setMaxHeight(MAXSIDE);
         this.renderPane.setMinHeight(MAXSIDE);
-        this.renderPane.setMouseTransparent(true);
+        this.render.setOnMouseClicked(new SelectHandler());
     }
 
     public abstract void updateRender();

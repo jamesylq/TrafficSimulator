@@ -23,8 +23,8 @@ public class LinearRoad extends Road implements Selectable {
         for (int i = 0; i < 4; i++) this.addCurve(null);
         updateRender();
 
-        this.addCurve(start.getCircleObj());
-        this.addCurve(end.getCircleObj());
+        this.addCurve(start.circleObj);
+        this.addCurve(end.circleObj);
     }
 
     public void updateRender() {
@@ -101,8 +101,6 @@ public class LinearRoad extends Road implements Selectable {
         }
         MainController.mainAnchorPane.getChildren().add(highlight);
         MainController.selectedHighlight = highlight;
-
-        for (BezierRoad road: BezierRoad.bezierRoadList) road.hideWeights();
     }
 
     public void setSelect(boolean b) {

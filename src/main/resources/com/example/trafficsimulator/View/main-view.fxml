@@ -50,12 +50,12 @@
                                           <RowConstraints vgrow="SOMETIMES" />
                                       </rowConstraints>
                                        <children>
-                                          <Button mnemonicParsing="false" prefHeight="25.0" prefWidth="279.0" styleClass="button-style" text="Save" GridPane.rowIndex="1">
+                                          <Button mnemonicParsing="false" onAction="#saveGraph" prefHeight="25.0" prefWidth="279.0" styleClass="button-style" text="Save" GridPane.rowIndex="1">
                                              <GridPane.margin>
                                                 <Insets left="10.0" right="10.0" />
                                              </GridPane.margin>
                                           </Button>
-                                          <Button mnemonicParsing="false" prefHeight="25.0" prefWidth="263.0" styleClass="button-style" text="Load" GridPane.rowIndex="2">
+                                          <Button mnemonicParsing="false" onAction="#loadGraph" prefHeight="25.0" prefWidth="263.0" styleClass="button-style" text="Load" GridPane.rowIndex="2">
                                              <GridPane.margin>
                                                 <Insets left="10.0" right="10.0" />
                                              </GridPane.margin>
@@ -133,6 +133,21 @@
                                                 <ImageView fx:id="templateImg4" fitHeight="64.0" fitWidth="64.0" layoutX="8.0" layoutY="8.0" pickOnBounds="true" preserveRatio="true">
                                                    <image>
                                                       <Image url="@../Images/trafficLight.png" />
+                                                   </image>
+                                                </ImageView>
+                                             </children>
+                                             <padding>
+                                                <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+                                             </padding>
+                                             <FlowPane.margin>
+                                                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                             </FlowPane.margin>
+                                          </Pane>
+                                          <Pane maxHeight="80.0" maxWidth="80.0" minHeight="80.0" minWidth="80.0" prefHeight="80.0" prefWidth="80.0" styleClass="image-style">
+                                             <children>
+                                                <ImageView fx:id="templateImg5" fitHeight="64.0" fitWidth="64.0" layoutX="8.0" layoutY="8.0" pickOnBounds="true" preserveRatio="true">
+                                                   <image>
+                                                      <Image url="@../Images/destination.png" />
                                                    </image>
                                                 </ImageView>
                                              </children>

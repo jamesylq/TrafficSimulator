@@ -5,14 +5,17 @@ import javafx.scene.input.*;
 import javafx.scene.paint.*;
 import javafx.scene.shape.*;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class Intersection {
-    private Point point;
-    private Circle circleObj;
-    public ArrayList<TrafficLight> trafficLights = new ArrayList<>();
+public class Intersection implements Serializable {
     public int index = -1;
+
+    private Point point;
+    public Destination destinationObj = null;
+    public Circle circleObj, borderCircleObj, borderCircleObj2;
     public HashMap<Road, Intersection> adjList = new HashMap<>();
+    public ArrayList<TrafficLight> trafficLights = new ArrayList<>();
     public static ArrayList<Intersection> intersectionList = new ArrayList<>();
 
     public Intersection() {
@@ -22,8 +25,22 @@ public class Intersection {
     public Intersection(Point point) {
         this();
         this.point = new Point(point);
-        this.circleObj = new Circle(point.getX(), point.getY(), 30);
-        this.circleObj.setFill(Color.TRANSPARENT);  //TODO
+        this.circleObj = new Circle(point.getX(), point.getY(), 37);
+        this.circleObj.setFill(Color.TRANSPARENT);
+
+        this.borderCircleObj = new Circle(32);
+        this.borderCircleObj.setStroke(Color.WHITE);
+        this.borderCircleObj.setMouseTransparent(true);
+        this.borderCircleObj.setStrokeWidth(2.5);
+        this.borderCircleObj.centerXProperty().bind(this.circleObj.centerXProperty());
+        this.borderCircleObj.centerYProperty().bind(this.circleObj.centerYProperty());
+
+        this.borderCircleObj2 = new Circle(point.getX(), point.getY(), 37);
+        this.borderCircleObj2.setFill(Color.BLACK);
+        this.borderCircleObj2.centerXProperty().bind(this.circleObj.centerXProperty());
+        this.borderCircleObj2.centerYProperty().bind(this.circleObj.centerYProperty());
+
+        MainController.mainAnchorPane.getChildren().addAll(this.borderCircleObj, this.borderCircleObj2);
 
         this.circleObj.setOnDragDetected(e -> {
             Dragboard db = this.circleObj.startDragAndDrop(TransferMode.MOVE);
@@ -54,7 +71,7 @@ public class Intersection {
             intersection.delete();
         }
 
-        MainController.mainAnchorPane.getChildren().remove(intersection.getCircleObj());
+        MainController.mainAnchorPane.getChildren().remove(intersection.circleObj);
         this.adjList.putAll(intersection.adjList);
     }
 
@@ -68,10 +85,6 @@ public class Intersection {
 
     public double getY() {
         return this.point.getY();
-    }
-
-    public Circle getCircleObj() {
-        return this.circleObj;
     }
 
     public void updateDrag() {
@@ -100,34 +113,40 @@ public class Intersection {
         return point.getDistance(this.point);
     }
 
-    public static double getDistance(Intersection a, Intersection b) {
-        return Point.getDistance(a.getPoint(), b.getPoint());
-    }
-
     public static Intersection getIntersectionFromCircle(Circle node) {
         for (Intersection intersection: intersectionList) {
-            if (intersection.getCircleObj().equals(node)) {
+            if (intersection.circleObj.equals(node)) {
                 return intersection;
             }
         }
-        return new Intersection();
-    }
-
-    public Intersection closestIntersection() {
-        return closestIntersection(Double.MAX_VALUE);
+        return null;
     }
 
     public Intersection closestIntersection(double maxDist) {
+        boolean destinationWarning = false;
         Intersection ans = null;
         double currMin = Double.MAX_VALUE, curr;
         for (Intersection intersection: intersectionList) {
             if (intersection == this) continue;
-            if ((curr = this.getDistance(intersection)) < currMin && curr < maxDist) {
+
+            curr = this.getDistance(intersection);
+
+            if (intersection.destinationObj != null) {
+                if (curr <= 40) destinationWarning = true;
+                continue;
+            }
+
+            if (curr < Math.min(currMin, maxDist)) {
                 currMin = curr;
                 ans = intersection;
             }
         }
-        return ans;
+
+        if (ans == null && destinationWarning || this.destinationObj != null && currMin <= 40) {
+            MainController.alertError("Invalid Placement!", "Destinations cannot be connected by more than one road!", "Try disconnecting one of the roads!");
+        }
+
+        return (this.destinationObj == null ? ans : null);
     }
 
     public static Intersection closestIntersection(double maxDist, Point point) {
@@ -143,8 +162,10 @@ public class Intersection {
     }
 
     public void delete() {
+        if (this.destinationObj != null) this.destinationObj.delete();
+
         intersectionList.remove(this);
-        MainController.mainAnchorPane.getChildren().remove(this.getCircleObj());
+        MainController.mainAnchorPane.getChildren().removeAll(this.borderCircleObj, this.borderCircleObj2);
 
         for (Vehicle vehicle: Vehicle.vehicleList) {
             if (vehicle.target == this) {

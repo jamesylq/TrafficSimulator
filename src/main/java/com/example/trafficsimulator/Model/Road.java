@@ -1,15 +1,15 @@
 package com.example.trafficsimulator.Model;
 
+import java.io.Serializable;
 import java.util.*;
 
 import com.example.trafficsimulator.Controller.MainController;
 import javafx.scene.shape.*;
 
-public abstract class Road implements Iterable {
+public abstract class Road implements Iterable, Serializable {
     public ArrayList<Shape> curves = new ArrayList<>();
     protected double speed = 1.0, length, weight;
     protected Intersection start, end;
-    public int numObstacles = 0;
     public ArrayList<RoadObject> fwdObjects = new ArrayList<>(), bckObjects = new ArrayList<>();
     public static ArrayList<Road> roadList = new ArrayList<>();
     public boolean selected = false;

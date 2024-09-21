@@ -15,7 +15,8 @@ import javafx.scene.paint.*;
 import javafx.scene.shape.*;
 import javafx.stage.*;
 
-import java.net.URL;
+import java.io.*;
+import java.net.*;
 import java.util.*;
 
 public class MainController implements Initializable {
@@ -29,6 +30,8 @@ public class MainController implements Initializable {
     private AnchorPane anchorPane, selectedAnchorPane;
     public static AnchorPane mainAnchorPane, mainSelectedAnchorPane;
 
+    public static ArrayList<Shape> permaFront = new ArrayList<>();
+
     @FXML
     private Accordion accordion;
 
@@ -36,7 +39,7 @@ public class MainController implements Initializable {
     private Hyperlink aboutHL;
 
     @FXML
-    private ImageView templateImg1, templateImg2, templateImg3, templateImg4;
+    private ImageView templateImg1, templateImg2, templateImg3, templateImg4, templateImg5;
 
     @FXML
     private Button simulateBtn, disconnectRoadBtn, deleteRoadBtn;
@@ -50,17 +53,17 @@ public class MainController implements Initializable {
     public static Slider MSS1, MSS2, MSS3, MSS4;
 
     public static Stage aboutPage;
-
     public static GraphEdge[][] dp;
 
     final String[] graphStats = {"Traffic Flow", "Average Vehicle Speed"};
 
     public static Selectable selectedNode = null;
     public static Shape selectedHighlight = null;
-
-    private static final Random random = new Random();
-
     public static boolean isSimulating = false;
+    public static final Random random = new Random();
+
+    public static final int FPS = 100;
+    public static int SPAWN_VEHICLE_RAND_NUM = FPS / 2;
 
     @FXML
     public void updateCB() {
@@ -86,12 +89,7 @@ public class MainController implements Initializable {
 
         anchorPane.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.ESCAPE) {
-                if (selectedNode != null) {
-                    selectedNode.setSelect(false);
-                    anchorPane.getChildren().remove(selectedHighlight);
-                    selectedNode = null;
-                    selectedHighlight = null;
-                }
+                SelectHandler.deselect();
             }
         });
 
@@ -125,6 +123,18 @@ public class MainController implements Initializable {
             ClipboardContent content = new ClipboardContent();
             content.putImage(templateImg4.getImage());
             content.putString("img4");
+            db.setContent(content);
+
+            e.consume();
+        });
+
+        templateImg5.setOnDragDetected(e -> {
+            Dragboard db = templateImg5.startDragAndDrop(TransferMode.COPY);
+
+            ClipboardContent content = new ClipboardContent();
+            content.putImage(templateImg5.getImage());
+
+            content.putString("img5");
             db.setContent(content);
 
             e.consume();
@@ -204,10 +214,26 @@ public class MainController implements Initializable {
 
                     case "img4":
                         Intersection closestIntersect = Intersection.closestIntersection(50, new Point(e.getX(), e.getY()));
-                        if (closestIntersect != null) {
+                        if (closestIntersect == null) {
+                            alertError("Invalid Placement!", "Traffic lights can only be placed on intersections!", "Try dragging a traffic light onto an intersection!");
+                        } else {
                             for (Road adj: closestIntersect.adjList.keySet()) {
                                 new TrafficLight(adj, closestIntersect);
                             }
+                        }
+
+                        e.setDropCompleted(true);
+                        e.consume();
+                        break;
+
+                    case "img5":
+                        Intersection closestIntersection = Intersection.closestIntersection(50, new Point(e.getX(), e.getY()));
+                        if (closestIntersection == null) {
+                            alertError("Invalid Placement!", "Only intersections can be destinations!", "Try dragging a destination object onto an intersection!");
+                        } else if (closestIntersection.adjList.size() > 1) {
+                            alertError("Invalid Placement!", "Destinations cannot be connected by more than one road!", "Try disconnecting one of the roads!");
+                        } else {
+                            new Destination(closestIntersection);
                         }
 
                         e.setDropCompleted(true);
@@ -251,9 +277,14 @@ public class MainController implements Initializable {
 
     public void updateLayers() {
         accordion.toFront();
+        for (Intersection intersection: Intersection.intersectionList) intersection.borderCircleObj.toFront();
+        for (Road road: Road.roadList) road.curves.get(2).toFront();
+        for (Road road: Road.roadList) road.curves.get(3).toFront();
         for (Vehicle vehicle: Vehicle.vehicleList) vehicle.renderPane.toFront();
         for (TrafficLight trafficLight: TrafficLight.trafficLightList) trafficLight.renderPane.toFront();
+        for (Intersection intersection: Destination.destinationList) intersection.destinationObj.render.toFront();
         draggableNodesToFront();
+        for (Shape shape: permaFront) shape.toFront();
     }
 
     public static void draggableNodesToFront() {
@@ -261,7 +292,7 @@ public class MainController implements Initializable {
             circle.toFront();
         }
         for (Intersection intersection: Intersection.intersectionList) {
-            intersection.getCircleObj().toFront();
+            intersection.circleObj.toFront();
         }
     }
 
@@ -296,7 +327,7 @@ public class MainController implements Initializable {
             deleteRoadBtn.setVisible(true);
 
             for (Intersection intersection: Intersection.intersectionList) {
-                intersection.getCircleObj().setVisible(true);
+                intersection.circleObj.setVisible(true);
             }
 
         } else {
@@ -345,27 +376,19 @@ public class MainController implements Initializable {
                 }
             }
 
-            for (int i = 0; i < 5; i++) {
-                new Car(Road.roadList.get(random.nextInt(Road.roadList.size())));
-            }
-
             simulateBtn.setText("End Simulation");
             disconnectRoadBtn.setVisible(false);
             deleteRoadBtn.setVisible(false);
 
             for (Intersection intersection: Intersection.intersectionList) {
-                intersection.getCircleObj().setVisible(false);
+                intersection.circleObj.setVisible(false);
             }
 
             for (Circle circle: BezierRoad.weights) {
                 circle.setVisible(false);
             }
 
-            anchorPane.getChildren().remove(selectedHighlight);
-            anchorPane.getChildren().removeAll(SelectHandler.curves);
-
-            selectedNode = null;
-            selectedHighlight = null;
+            SelectHandler.deselect();
             SelectHandler.display();
         }
 
@@ -385,9 +408,6 @@ public class MainController implements Initializable {
                 return;
             }
 
-            selectedRoad.getStart().remove(selectedRoad);
-            selectedRoad.getEnd().remove(selectedRoad);
-
             while (!selectedRoad.getStart().trafficLights.isEmpty()) {
                 selectedRoad.getStart().trafficLights.getFirst().delete();
             }
@@ -396,18 +416,38 @@ public class MainController implements Initializable {
                 selectedRoad.getEnd().trafficLights.getFirst().delete();
             }
 
-            Intersection start = new Intersection(selectedRoad.getPoint(selectedRoad.getStart().adjList.isEmpty() ? 0.0 : 0.1));
-            Intersection end = new Intersection(selectedRoad.getPoint(selectedRoad.getEnd().adjList.isEmpty() ? 1.0 : 0.9));
+            if (selectedRoad.getStart().adjList.size() > 1) {
+                selectedRoad.getStart().remove(selectedRoad);
+                Intersection start = new Intersection(selectedRoad.getPoint(0.1));
+                changeAllVehicleNode(selectedRoad.getStart(), start);
+                selectedRoad.setStart(start);
+                start.add(selectedRoad, selectedRoad.getEnd());
+                anchorPane.getChildren().add(start.circleObj);
+            }
 
-            changeAllVehicleNode(selectedRoad.getStart(), start);
-            changeAllVehicleNode(selectedRoad.getEnd(), end);
+            if (selectedRoad.getEnd().adjList.size() > 1) {
+                selectedRoad.getEnd().remove(selectedRoad);
+                Intersection end = new Intersection(selectedRoad.getPoint(0.9));
+                changeAllVehicleNode(selectedRoad.getEnd(), end);
+                selectedRoad.setEnd(end);
+                end.add(selectedRoad, selectedRoad.getStart());
+                anchorPane.getChildren().add(end.circleObj);
+            }
 
-            selectedRoad.setStart(start);
-            selectedRoad.setEnd(end);
-            start.add(selectedRoad, end);
-            end.add(selectedRoad, start);
+//            Intersection start = new Intersection(selectedRoad.getPoint(selectedRoad.getStart().adjList.isEmpty() ? 0.0 : 0.1));
+//            Intersection end = new Intersection(selectedRoad.getPoint(selectedRoad.getEnd().adjList.isEmpty() ? 1.0 : 0.9));
+//
+//            changeAllVehicleNode(selectedRoad.getStart(), start);
+//            changeAllVehicleNode(selectedRoad.getEnd(), end);
+//
+//            selectedRoad.setStart(start);
+//            selectedRoad.setEnd(end);
+//            start.add(selectedRoad, end);
+//            end.add(selectedRoad, start);
+
+//            anchorPane.getChildren().addAll(start.circleObj, end.circleObj);
+
             selectedRoad.updateDrag();
-            anchorPane.getChildren().addAll(start.getCircleObj(), end.getCircleObj());
             updateLayers();
         }
     }
@@ -422,22 +462,20 @@ public class MainController implements Initializable {
 
     @FXML
     public void deleteSelected() {
+        if (selectedNode == null) return;
+
         if (selectedNode instanceof Road selectedRoad) {
             selectedRoad.delete();
-            anchorPane.getChildren().remove(selectedHighlight);
-            anchorPane.getChildren().removeAll(SelectHandler.curves);
 
             for (RoadObject roadObject: selectedRoad.fwdObjects) {
                 if (roadObject instanceof Vehicle vehicle) {
-                    anchorPane.getChildren().remove(vehicle.renderPane);
-                    Vehicle.vehicleList.remove(vehicle);
+                    vehicle.delete();
                 }
             }
 
             for (RoadObject roadObject: selectedRoad.bckObjects) {
                 if (roadObject instanceof Vehicle vehicle) {
-                    anchorPane.getChildren().remove(vehicle.renderPane);
-                    Vehicle.vehicleList.remove(vehicle);
+                    vehicle.delete();
                 }
             }
 
@@ -448,14 +486,13 @@ public class MainController implements Initializable {
             while (!selectedRoad.getEnd().trafficLights.isEmpty()) {
                 selectedRoad.getEnd().trafficLights.getFirst().delete();
             }
-
-            selectedNode = null;
-            selectedHighlight = null;
-            SelectHandler.display();
         }
+
+        SelectHandler.deselect();
+        SelectHandler.display();
     }
 
-    private void alertError(String title, String header, String content) {
+    public static void alertError(String title, String header, String content) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);
         alert.setHeaderText(header);
@@ -464,11 +501,51 @@ public class MainController implements Initializable {
     }
 
     @FXML
+    public void saveGraph() {
+        try {
+            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("save.txt"));
+//            out.writeObject(new Arrangement(
+//                    Vehicle.vehicleList,
+//                    Road.roadList,
+//                    TrafficLight.trafficLightList,
+//                    Destination.destinationList,
+//                    Intersection.intersectionList
+//            ));
+            out.close();
+            
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    public void loadGraph() {
+        try {
+            ObjectInputStream input = new ObjectInputStream(new FileInputStream("save.txt"));
+            Arrangement arrangement = (Arrangement) input.readObject();
+            Vehicle.vehicleList = arrangement.vehicleList;
+            Road.roadList = arrangement.roadList;
+            TrafficLight.trafficLightList = arrangement.trafficLightlist;
+            Destination.destinationList = arrangement.destinationList;
+            Intersection.intersectionList = arrangement.intersectionList;
+
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
     public void clearGraph() {
         anchorPane.getChildren().removeAll(BezierRoad.weights);
         for (Road road: Road.roadList) anchorPane.getChildren().removeAll(road.curves);
         for (Vehicle vehicle: Vehicle.vehicleList) anchorPane.getChildren().remove(vehicle.renderPane);
-        for (Intersection intersection: Intersection.intersectionList) anchorPane.getChildren().remove(intersection.getCircleObj());
+        for (Intersection intersection: Intersection.intersectionList) {
+            anchorPane.getChildren().remove(intersection.circleObj);
+            anchorPane.getChildren().remove(intersection.borderCircleObj);
+            anchorPane.getChildren().remove(intersection.borderCircleObj2);
+
+            if (intersection.destinationObj != null) intersection.destinationObj.delete();
+        }
 
         while (!TrafficLight.trafficLightList.isEmpty()) TrafficLight.trafficLightList.getFirst().delete();
 
@@ -478,9 +555,7 @@ public class MainController implements Initializable {
         BezierRoad.bezierRoadList.clear();
         Intersection.intersectionList.clear();
 
-        anchorPane.getChildren().remove(selectedHighlight);
-        selectedHighlight = null;
-        selectedNode = null;
+        SelectHandler.deselect();
         SelectHandler.display();
     }
 
@@ -489,11 +564,22 @@ public class MainController implements Initializable {
             while (true) {
                 if (isSimulating) {
                     Platform.runLater(() -> {
-                        for (Road road : Road.roadList) road.iterate();
-                        for (Vehicle vehicle : Vehicle.vehicleList) vehicle.iterate();
-                        for (TrafficLight trafficLight : TrafficLight.trafficLightList) trafficLight.iterate();
+                        if (random.nextInt(SPAWN_VEHICLE_RAND_NUM) == 0) {
+                            Intersection start = Vehicle.generateTarget();
+                            for (Road road: start.adjList.keySet()) {
+                                new Car(road, start);
+                            }
+                        }
+
+                        for (Road road: Road.roadList) road.iterate();
+                        for (Vehicle vehicle: Vehicle.vehicleList) vehicle.iterate();
+                        for (TrafficLight trafficLight: TrafficLight.trafficLightList) trafficLight.iterate();
                         updateLayers();
                         TrafficLight.globalTick = ++TrafficLight.globalTick % TrafficLight.TICK_CYCLE;
+
+                        ArrayList<Vehicle> remVehicles = new ArrayList<>();
+                        for (Vehicle vehicle: Vehicle.vehicleList) if (!vehicle.deleted) remVehicles.add(vehicle);
+                        Vehicle.vehicleList = remVehicles;
                     });
 
                 } else {
@@ -504,7 +590,7 @@ public class MainController implements Initializable {
                     });
                 }
 
-                Thread.sleep(10);
+                Thread.sleep((999 + FPS) / FPS);
             }
 
         } catch (InterruptedException ignored) {}

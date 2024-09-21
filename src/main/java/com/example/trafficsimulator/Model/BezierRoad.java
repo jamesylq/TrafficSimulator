@@ -49,10 +49,10 @@ public class BezierRoad extends Road implements Selectable {
         for (int i = 0; i < 4; i++) this.addCurve(null);
         updateRender();
 
-        this.addCurve(start.getCircleObj());
+        this.addCurve(start.circleObj);
         this.addCurve(weightStart);
         this.addCurve(weightEnd);
-        this.addCurve(end.getCircleObj());
+        this.addCurve(end.circleObj);
 
         calculateLength();
     }
@@ -221,8 +221,6 @@ public class BezierRoad extends Road implements Selectable {
         }
         MainController.mainAnchorPane.getChildren().add(highlight);
         MainController.selectedHighlight = highlight;
-
-        for (BezierRoad road: BezierRoad.bezierRoadList) road.hideWeights();
 
         weightStart.setVisible(true);
         weightEnd.setVisible(true);

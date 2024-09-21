@@ -1,19 +1,13 @@
 package com.example.trafficsimulator.Model;
 
 public class Obstacle extends RoadObject {
-    Obstacle(Road road, Point point) {
+    Object parent;
+
+    Obstacle(Object parent, Road road) {
         super(road);
-
-        this.road = road;
-        this.point = point;
-        this.road.numObstacles++;
+        this.parent = parent;
+        this.roadRelPos = Math.min(0.1, 15 / this.road.length);
     }
 
-    public void updateRender() {
-
-    }
-
-    public void delete() {
-        this.road.numObstacles--;
-    }
+    public void updateRender() {}
 }

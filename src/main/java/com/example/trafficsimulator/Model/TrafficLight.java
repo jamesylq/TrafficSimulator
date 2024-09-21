@@ -31,6 +31,8 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
     public double renderRoadRelPos, rx, ry;
     public boolean selected = false;
 
+    public ArrayList<Obstacle> obstacleObjects;
+
     public TrafficLight(Road road, Intersection intersection) {
         this(road, intersection, (new Random()).nextDouble());
     }
@@ -44,18 +46,15 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
         HEIGHT = 60;
 
         this.road = road;
-        this.phase = (int) (phase * TICK_CYCLE);
+        this.phase = (int) ((phase % 1.0) * TICK_CYCLE);
         this.intersection = intersection;
+        updateState();
 
-        if (this.road.end == this.intersection) {
-            this.roadRelPos = 1;
-            this.road.fwdObjects.add(this);
-            this.road.bckObjects.addFirst(this);
-        } else {
-            this.roadRelPos = 0;
-            this.road.fwdObjects.addFirst(this);
-            this.road.bckObjects.add(this);
-        }
+        this.roadRelPos = (this.road.end == this.intersection ? 1 - 1e-4 : 1e-4);
+        this.road.fwdObjects.add(this);
+        this.road.bckObjects.add(this);
+        this.road.fwdObjects.sort(Comparator.naturalOrder());
+        this.road.bckObjects.sort(Comparator.reverseOrder());
 
         this.renderRoadRelPos = Math.min(0.1, 50 / this.road.length);
         if (this.road.end == this.intersection) this.renderRoadRelPos = 1 - this.renderRoadRelPos;
@@ -134,10 +133,10 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
         if (MainController.selectedHighlight != null) {
             MainController.mainAnchorPane.getChildren().remove(MainController.selectedHighlight);
         }
+
         MainController.mainAnchorPane.getChildren().add(highlight);
         MainController.selectedHighlight = highlight;
-
-        for (BezierRoad road: BezierRoad.bezierRoadList) road.hideWeights();
+        MainController.selectedNode = this;
     }
 
     public void setSelect(boolean b) {

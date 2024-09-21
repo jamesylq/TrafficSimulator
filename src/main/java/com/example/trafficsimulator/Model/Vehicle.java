@@ -1,6 +1,8 @@
 package com.example.trafficsimulator.Model;
 
 import com.example.trafficsimulator.Controller.MainController;
+import javafx.scene.paint.*;
+import javafx.scene.shape.*;
 
 import java.util.*;
 
@@ -9,23 +11,24 @@ public abstract class Vehicle extends RoadObject implements Iterable, Selectable
     protected double speed;
     public Intersection target, prev, next;
     public static ArrayList<Vehicle> vehicleList = new ArrayList<>();
-    public boolean selected;
+    public boolean selected, deleted = false;
+
+    private static final Random random = new Random();
 
     Vehicle(Road road) {
         super(road);
 
         vehicleList.add(this);
-        this.prev = this.road.start;
-        this.next = this.road.end;
     }
 
 
     public void iterate() {
         double step = this.speed * road.speed / road.length;
-        if (target != null) step *= distanceFactor(getDistance(nextCollidable()));
+        if (this.target != null) step *= distanceFactor(getDistance(nextCollidable()));
 
-        this.roadRelPos += flip() * step;
-        if (this.roadRelPos >= 1 || this.roadRelPos <= 0) {
+        this.roadRelPos = bound(this.roadRelPos + flip() * step);
+
+        if (this.isFwd() && this.roadRelPos >= 1 || !this.isFwd() && this.roadRelPos <= 0) {
             this.prev = this.next;
             this.findTarget();
         }
@@ -33,11 +36,22 @@ public abstract class Vehicle extends RoadObject implements Iterable, Selectable
         updateRender();
     }
 
-    public void findTarget() {
-        Random random = new Random();
+    public static Intersection generateTarget() {
+        return Destination.destinationList.get(random.nextInt(Destination.destinationList.size()));
+    }
 
-        while (target == null || target == prev) {
-            target = Intersection.intersectionList.get(random.nextInt(Intersection.intersectionList.size()));
+    public static Intersection generateTarget(Intersection exclude) {
+        int excl = Destination.destinationList.indexOf(exclude);
+        if (excl == -1) return generateTarget();
+
+        int ind = random.nextInt(Destination.destinationList.size() - 1);
+        return Destination.destinationList.get(ind >= excl ? ++ind : ind);
+    }
+
+    public void findTarget() {
+        if (target == prev) {
+            this.delete();
+            return;
         }
 
         GraphEdge graphEdge = MainController.dp[prev.index][target.index];
@@ -52,6 +66,13 @@ public abstract class Vehicle extends RoadObject implements Iterable, Selectable
             roadRelPos = 1;
             road.bckObjects.add(this);
         }
+    }
+
+    public void delete() {
+        MainController.mainAnchorPane.getChildren().remove(this.renderPane);
+        this.deleted = true;
+        getRoadObjects().remove(this);
+//        Vehicle.vehicleList.remove(this);
     }
 
     public void updateRender() {
@@ -99,23 +120,6 @@ public abstract class Vehicle extends RoadObject implements Iterable, Selectable
         return null;
     }
 
-//    public RoadObject nextObject() {
-//        GraphEdge graphEdge;
-//        ArrayList<RoadObject> objList;
-//        Intersection cur = this.prev;
-//
-//        while (cur != this.target) {
-//            graphEdge = MainController.dp[cur.index][this.target.index];
-//            cur = graphEdge.adj;
-//            objList = (graphEdge.isFwd() ? graphEdge.edge.fwdObjects : graphEdge.edge.bckObjects);
-//
-//            int ind = objList.indexOf(this);
-//            if (++ind < objList.size()) return objList.get(ind);
-//        }
-//
-//        return null;
-//    }
-
     public double getDistance(RoadObject roadObject) {
         if (roadObject == null) return Double.MAX_VALUE;
         if (road == roadObject.road) return road.getDistance(roadRelPos, roadObject.roadRelPos);
@@ -141,12 +145,7 @@ public abstract class Vehicle extends RoadObject implements Iterable, Selectable
     }
 
     public static double distanceFactor(double x) {
-        return Math.max(0, 1 / (1 + Math.pow(Math.E, -0.1 * (x - 50))) - 0.08);
-    }
-
-    @Override
-    public String toString() {
-        return Double.toString(this.roadRelPos);
+        return bound(1 / (0.91 * (1 + Math.pow(Math.E, -(x - 90.0) / 20.0))) - 0.08);
     }
 
     public void setSelect(boolean b) {
@@ -158,6 +157,31 @@ public abstract class Vehicle extends RoadObject implements Iterable, Selectable
     }
 
     public void onSelect() {
+        MainController.mainAnchorPane.getChildren().removeAll(MainController.permaFront);
+        MainController.permaFront.clear();
 
+        GraphEdge graphEdge;
+        Intersection cur = this.prev;
+
+        while (cur != this.target) {
+            graphEdge = MainController.dp[cur.index][this.target.index];
+            Line l = new Line(
+                    cur.getX(), cur.getY(),
+                    graphEdge.adj.getX(), graphEdge.adj.getY()
+            );
+            l.setStroke(Color.WHITE);
+            l.setStrokeWidth(5);
+            MainController.permaFront.add(l);
+            for (Shape shape: MainController.permaFront) {
+                if (!MainController.mainAnchorPane.getChildren().contains(shape)) {
+                    MainController.mainAnchorPane.getChildren().add(shape);
+                }
+            }
+            cur = graphEdge.adj;
+        }
+    }
+
+    public static double bound(double x) {
+        return Math.max(0.0, Math.min(1.0, x));
     }
 }

@@ -8,30 +8,45 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.*;
 import javafx.scene.shape.*;
 
+import java.util.Comparator;
 import java.util.Objects;
 
 public class Car extends Vehicle {
     public static final double DEFAULT_SPEED = 1.0;
-    public static final Image CAR_IMAGE = new Image(
+    public static final Image TEXTURE = new Image(
             Objects.requireNonNull(MainApplication.class.getResourceAsStream("Images/car.png")),
             38, 20, false, false
     );
 
-    public Car(Road road) {
-        this(road, DEFAULT_SPEED);
-    }
-
-    public Car(Road road, double speed) {
+    public Car(Road road, Intersection intersection) {
         super(road);
 
-        WIDTH = 38;
-        HEIGHT = 20;
+        this.speed = DEFAULT_SPEED;
+        this.WIDTH = 38;
+        this.HEIGHT = 20;
 
         this.road = road;
-        this.speed = speed;
         this.name = "Car";
 
-        this.render = new ImageView(CAR_IMAGE);
+        if (intersection == this.road.start) {
+            this.prev = this.road.start;
+            this.next = this.road.end;
+
+            roadRelPos = 0;
+            road.fwdObjects.add(this);
+            road.fwdObjects.sort(Comparator.naturalOrder());
+
+        } else {
+            this.prev = this.road.end;
+            this.next = this.road.start;
+
+            roadRelPos = 1;
+            road.bckObjects.add(this);
+            road.bckObjects.sort(Comparator.reverseOrder());
+        }
+
+        this.target = Vehicle.generateTarget(this.prev);
+        this.render = new ImageView(TEXTURE);
         initRenderPane();
 
         MainController.mainAnchorPane.getChildren().add(this.renderPane);

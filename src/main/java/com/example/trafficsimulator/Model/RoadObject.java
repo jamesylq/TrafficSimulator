@@ -1,10 +1,12 @@
 package com.example.trafficsimulator.Model;
 
-import javafx.geometry.Pos;
+import javafx.geometry.*;
 import javafx.scene.image.*;
 import javafx.scene.layout.*;
 
-public abstract class RoadObject implements Comparable<RoadObject> {
+import java.io.Serializable;
+
+public abstract class RoadObject implements Comparable<RoadObject>, Serializable {
     protected double roadRelPos = 0, WIDTH, HEIGHT, MAXSIDE;
     public boolean collidable = true;
     protected Point point;
@@ -44,5 +46,11 @@ public abstract class RoadObject implements Comparable<RoadObject> {
     @Override
     public int compareTo(RoadObject o) {
         return (int) Math.signum(this.roadRelPos - o.roadRelPos);
+    }
+
+    @Override
+    public String toString() {
+        String[] className = this.getClass().getName().split("\\.");
+        return String.format("%s: %f", className[className.length - 1], this.roadRelPos);
     }
 }

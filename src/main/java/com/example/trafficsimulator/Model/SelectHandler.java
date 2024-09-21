@@ -17,10 +17,7 @@ public class SelectHandler implements EventHandler<MouseEvent> {
     public void handle(MouseEvent e) {
         Object source = e.getSource();
 
-        if (MainController.selectedNode != null) {
-            MainController.selectedNode.setSelect(false);
-            MainController.mainAnchorPane.getChildren().remove(MainController.selectedHighlight);
-        }
+        deselect();
 
         if (source instanceof Line || source instanceof CubicCurve) {
             if (MainController.isSimulating) return;
@@ -60,7 +57,7 @@ public class SelectHandler implements EventHandler<MouseEvent> {
 
             for (Vehicle vehicle: Vehicle.vehicleList) {
                 if (vehicle.render == source) {
-//                    System.out.println("vehicle");
+                    vehicle.onSelect();
                     return;
                 }
             }
@@ -127,6 +124,17 @@ public class SelectHandler implements EventHandler<MouseEvent> {
                 }
             }
         }
+    }
+
+    public static void deselect() {
+        if (MainController.selectedNode != null) {
+            MainController.selectedNode.setSelect(false);
+            MainController.mainAnchorPane.getChildren().remove(MainController.selectedHighlight);
+            MainController.selectedHighlight = null;
+            MainController.selectedNode = null;
+        }
+
+        for (BezierRoad road: BezierRoad.bezierRoadList) road.hideWeights();
     }
 
     public static void addPoint(Point point) {

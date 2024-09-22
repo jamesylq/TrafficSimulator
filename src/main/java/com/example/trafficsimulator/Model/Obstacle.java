@@ -1,12 +1,28 @@
 package com.example.trafficsimulator.Model;
 
 public class Obstacle extends RoadObject {
-    Object parent;
+    RoadObject parent;
 
-    Obstacle(Object parent, Road road) {
+    Obstacle(RoadObject parent, Road road) {
         super(road);
         this.parent = parent;
-        this.roadRelPos = Math.min(0.1, 15 / this.road.length);
+
+        if (this.parent instanceof TrafficLight tl) {
+            this.roadRelPos = Math.min(0.1, 15 / this.road.length);
+            if (tl.intersection == this.road.end) {
+                this.roadRelPos = 1 - this.roadRelPos;
+                this.road.fwdObjects.add(this);
+            } else {
+                this.road.bckObjects.add(this);
+            }
+        }
+    }
+
+    public boolean isCollidable(Vehicle vehicle) {
+        if (this.parent instanceof TrafficLight tl) {
+            return (this.collidable && vehicle.path.contains(tl.road));
+        }
+        return false;
     }
 
     public void updateRender() {}

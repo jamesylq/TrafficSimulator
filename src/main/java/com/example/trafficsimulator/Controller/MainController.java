@@ -69,7 +69,7 @@ public class MainController implements Initializable {
     public static final Random random = new Random();
 
     public static final int FPS = 100;
-    public static int SPAWN_VEHICLE_RAND_NUM = FPS / 2;
+    public static int SPAWN_VEHICLE_RAND_NUM = FPS;
 
     public static final EditableParameter[] SETTINGS_OBJECTS = {
         new EditableParameter(
@@ -241,6 +241,10 @@ public class MainController implements Initializable {
                             alertError("Invalid Placement!", "Traffic lights can only be placed on intersections of 3 or more roads!", "Try connecting more roads to your intersection!");
                         } else {
                             for (Road adj: closestIntersect.adjList.keySet()) new TrafficLight(adj, closestIntersect);
+                            for (Road adj: closestIntersect.adjList.keySet()) {
+                                adj.fwdObjects.sort(Comparator.naturalOrder());
+                                adj.bckObjects.sort(Comparator.reverseOrder());
+                            }
 
                             if (closestIntersect.adjList.size() == 3) {
                                 final double angle0 = closestIntersect.trafficLights.get(0).angle;
@@ -669,7 +673,9 @@ public class MainController implements Initializable {
             }
 
             for (TrafficLightWrapper tlWrap: arrangement.trafficLightList) {
-                new TrafficLight(roadAt(tlWrap.road), intAt(tlWrap.intersection));
+                TrafficLight tl = new TrafficLight(roadAt(tlWrap.road), intAt(tlWrap.intersection), tlWrap.phase);
+                tl.iterate();
+                tl.render.setImage(TrafficLight.TEXTURES[tl.updateState()]);
             }
 
             updateLayers();

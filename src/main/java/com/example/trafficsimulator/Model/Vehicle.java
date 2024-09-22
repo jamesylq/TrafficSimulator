@@ -11,6 +11,7 @@ public abstract class Vehicle extends RoadObject implements Iterable, Selectable
     public double speed;
     public Intersection target, prev, next;
     public static ArrayList<Vehicle> vehicleList = new ArrayList<>();
+    public ArrayList<Road> path = new ArrayList<>();
     public boolean selected, deleted = false;
 
     private static final Random random = new Random();
@@ -21,9 +22,18 @@ public abstract class Vehicle extends RoadObject implements Iterable, Selectable
         vehicleList.add(this);
     }
 
-
     public void iterate() {
         double step = this.speed * road.speed / road.length;
+        GraphEdge graphEdge;
+        Intersection cur = this.prev;
+
+        this.path.clear();
+        while (cur != this.target) {
+            graphEdge = MainController.dp[cur.index][this.target.index];
+            cur = graphEdge.adj;
+            this.path.add(graphEdge.edge);
+        }
+
         if (this.target != null) step *= distanceFactor(getDistance(nextCollidable()));
 
         this.roadRelPos = bound(this.roadRelPos + flip() * step);
@@ -110,7 +120,7 @@ public abstract class Vehicle extends RoadObject implements Iterable, Selectable
 
             int ind = objList.indexOf(this);
             while (++ind < objList.size()) {
-                if ((current = objList.get(ind)).collidable) {
+                if ((current = objList.get(ind)).isCollidable(this)) {
                     return current;
                 }
             }
@@ -145,6 +155,10 @@ public abstract class Vehicle extends RoadObject implements Iterable, Selectable
 
     public static double distanceFactor(double x) {
         return bound(1 / (0.91 * (1 + Math.pow(Math.E, -(x - 90.0) / 20.0))) - 0.08);
+    }
+
+    public boolean isCollidable(Vehicle vehicle) {
+        return true;
     }
 
     public void setSelect(boolean b) {

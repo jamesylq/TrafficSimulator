@@ -35,10 +35,10 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
     public static long globalTick = 0;
     public int currState;
     public Intersection intersection;
-    public double renderRoadRelPos, rx, ry;
+    public double rx, ry;
     public boolean selected = false;
     public static final Random random = new Random();
-
+    public final ArrayList<Obstacle> obstacles = new ArrayList<>();
 
     public TrafficLight(Road road, Intersection intersection) {
         this(road, intersection, -1);
@@ -49,26 +49,29 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
 
         if (alreadyExists(road, intersection)) return;
 
-        WIDTH = 24;
-        HEIGHT = 60;
+        this.WIDTH = 24;
+        this.HEIGHT = 60;
+        this.collidable = false;
 
         this.road = road;
         this.phase = (phase < 0 ? random.nextInt(TICK_CYCLE) : phase);
         this.intersection = intersection;
         updateState();
 
-        this.roadRelPos = (isFront() ? 1e-4 : 1 - 1e-4);
-        this.angle = this.road.getAngle(this.roadRelPos);
+        this.angle = this.road.getAngle(isFront() ? 1e-4 : 1 - 1e-4);
         if (!isFront()) this.angle -= Math.PI;
         this.angle = (this.angle % Math.TAU + Math.TAU) % Math.TAU;
 
         this.road.fwdObjects.add(this);
         this.road.bckObjects.add(this);
-        this.road.fwdObjects.sort(Comparator.naturalOrder());
-        this.road.bckObjects.sort(Comparator.reverseOrder());
 
-        this.renderRoadRelPos = Math.min(0.1, 50 / this.road.length);
-        if (!isFront()) this.renderRoadRelPos = 1 - this.renderRoadRelPos;
+        for (Road r: this.intersection.adjList.keySet()) {
+            if (r == this.road) continue;
+            this.obstacles.add(new Obstacle(this, r));
+        }
+
+        this.roadRelPos = Math.min(0.1, 50 / this.road.length);
+        if (!isFront()) this.roadRelPos = 1 - this.roadRelPos;
         getPoint();
 
         trafficLightList.add(this);
@@ -89,27 +92,20 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
         RED_DURATION = GREEN_DURATION + YELLOW_DURATION;
         TICK_CYCLE = RED_DURATION * 2;
 
-        if (tick < GREEN_DURATION) {
-            collidable = false;
-            return currState = 0;
-        }
-        if (tick < GREEN_DURATION + YELLOW_DURATION) {
-            collidable = false;
-            return currState = 1;
-        }
-        collidable = true;
+        if (tick < GREEN_DURATION) return currState = 0;
+        if (tick < GREEN_DURATION + YELLOW_DURATION) return currState = 1;
         return currState = 2;
     }
 
     public void updateRender() {
-        this.renderRoadRelPos = Math.min(0.3, 100 / this.road.length);
-        if (this.road.end == this.intersection) this.renderRoadRelPos = 1 - this.renderRoadRelPos;
+        this.roadRelPos = Math.min(0.3, 100 / this.road.length);
+        if (this.road.end == this.intersection) this.roadRelPos = 1 - this.roadRelPos;
         getPoint();
 
-        this.render.setRotate(this.road.getAngle(this.renderRoadRelPos) * 180 / Math.PI);
+        this.render.setRotate(this.road.getAngle(this.roadRelPos) * 180 / Math.PI);
 
-        this.renderPane.setLayoutX((this.rx = this.road.getPoint(this.renderRoadRelPos).getX()) - MAXSIDE / 2);
-        this.renderPane.setLayoutY((this.ry = this.road.getPoint(this.renderRoadRelPos).getY()) - MAXSIDE / 2);
+        this.renderPane.setLayoutX((this.rx = this.road.getPoint(this.roadRelPos).getX()) - MAXSIDE / 2);
+        this.renderPane.setLayoutY((this.ry = this.road.getPoint(this.roadRelPos).getY()) - MAXSIDE / 2);
 
         if (this.selected) onSelect();
     }
@@ -117,12 +113,23 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
     public void iterate() {
         tick = ((int) ((globalTick + phase) % TICK_CYCLE) + TICK_CYCLE) % TICK_CYCLE;
 
+        if (tick >= GREEN_DURATION + YELLOW_DURATION) {
+            for (Obstacle obst: obstacles) obst.collidable = true;
+        } else {
+            for (Obstacle obst: obstacles) obst.collidable = false;
+        }
+
         if (tick == 0 || tick == GREEN_DURATION || tick == GREEN_DURATION + YELLOW_DURATION) {
             render.setImage(TEXTURES[updateState()]);
+
             if (this.selected) SelectHandler.display();
         }
 
         updateRender();
+    }
+
+    public boolean isCollidable(Vehicle vehicle) {
+        return false;
     }
 
     public static boolean alreadyExists(Road road, Intersection intersection) {
@@ -142,7 +149,7 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
 
     public void onSelect() {
         Polygon highlight = new Polygon();
-        final double angle = this.road.getAngle(this.renderRoadRelPos);
+        final double angle = this.road.getAngle(this.roadRelPos);
         for (double cornerAngle: CORNERANGLES) {
             highlight.getPoints().add(this.rx + Math.cos(angle + cornerAngle) * DIAG);
             highlight.getPoints().add(this.ry + Math.sin(angle + cornerAngle) * DIAG);

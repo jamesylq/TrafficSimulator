@@ -45,6 +45,8 @@ public abstract class RoadObject implements Comparable<RoadObject> {
 
     public abstract void updateRender();
 
+    public abstract boolean isCollidable(Vehicle vehicle);
+
     @Override
     public int compareTo(RoadObject o) {
         return (int) Math.signum(this.roadRelPos - o.roadRelPos);

@@ -14,8 +14,8 @@ public class MainApplication extends Application {
     public void start(Stage stage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("View/main-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 1200, 700);
-        stage.setMinHeight(500);
-        stage.setMinWidth(700);
+        stage.setMinHeight(600);
+        stage.setMinWidth(900);
         stage.setScene(scene);
         stage.setTitle("TrafficSimulator");
         stage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("Images/icon.png"))));

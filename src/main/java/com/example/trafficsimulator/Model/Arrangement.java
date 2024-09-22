@@ -40,6 +40,8 @@ public class Arrangement implements Serializable {
             (vehicle = Vehicle.vehicleList.get(i)).index = i;
             if (vehicle instanceof Car) {
                 VehicleWrapper.processedVehicles.add(new CarWrapper(i));
+            } else if (vehicle instanceof Truck) {
+                VehicleWrapper.processedVehicles.add(new TruckWrapper(i));
             }
         }
         for (int i = 0; i < Destination.destinationList.size(); i++) {
@@ -65,6 +67,8 @@ public class Arrangement implements Serializable {
             vehicle = Vehicle.vehicleList.get(i);
             if (vehicle instanceof Car car) {
                 ((CarWrapper) (VehicleWrapper.get(i))).load(car);
+            } else if (vehicle instanceof Truck truck) {
+                ((TruckWrapper) (VehicleWrapper.get(i))).load(truck);
             }
         }
         for (int i = 0; i < Destination.destinationList.size(); i++) {

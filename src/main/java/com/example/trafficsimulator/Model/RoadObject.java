@@ -7,7 +7,7 @@ import javafx.scene.layout.*;
 import java.util.ArrayList;
 
 public abstract class RoadObject implements Comparable<RoadObject> {
-    public double roadRelPos = 0, WIDTH, HEIGHT, MAXSIDE;
+    public double roadRelPos = 0, WIDTH = 0, HEIGHT = 0, MAXSIDE = 0;
     public boolean collidable = true;
     public static ArrayList<RoadObject> roadObjectList;
 

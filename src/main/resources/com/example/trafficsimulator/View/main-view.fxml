@@ -22,6 +22,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.text.Font?>
 
 <AnchorPane fx:id="anchorPane" maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minHeight="400.0" minWidth="700.0" prefHeight="491.0" prefWidth="700.0" style="-fx-background-color: #666666;" stylesheets="@../style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.trafficsimulator.Controller.MainController">
    <children>
@@ -170,16 +171,19 @@
                                         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                                       </columnConstraints>
                                       <rowConstraints>
-                                        <RowConstraints maxHeight="200.0" vgrow="SOMETIMES" />
-                                        <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="360.0" minHeight="360.0" prefHeight="360.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" prefHeight="41.0" vgrow="SOMETIMES" />
                                       </rowConstraints>
                                        <children>
-                                          <Button mnemonicParsing="false" styleClass="button-style" stylesheets="@../style.css" text="Highlight Congestion" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.valignment="BOTTOM">
+                                          <Button mnemonicParsing="false" onAction="#highlightCongestion" styleClass="button-style" stylesheets="@../style.css" text="Highlight Congestion" GridPane.halignment="RIGHT" GridPane.rowIndex="1" GridPane.valignment="BOTTOM">
                                              <GridPane.margin>
                                                 <Insets bottom="5.0" right="5.0" />
                                              </GridPane.margin>
                                           </Button>
-                                          <TextArea styleClass="text-area" stylesheets="@../style.css" text="Statistics of the Current Save File:&#10;&#10;Number of Vehicles:&#10;Number of Roads:&#10;Number of Intersections:&#10;&#10;Average Speed of Cars:&#10;Traffic Flow:&#10;" />
+                                          <TextArea fx:id="statsTA" editable="false" maxHeight="360.0" minHeight="360.0" prefHeight="360.0" prefWidth="230.0" styleClass="text-area" stylesheets="@../style.css" text="Statistics of the Current Save File:&#10;&#10;&#10;Number of Vehicles:&#10;0&#10;&#10;Number of Roads:&#10;0&#10;&#10;Number of Intersections:&#10;0&#10;&#10;Average Speed of Cars:&#10;-&#10;&#10;Traffic Flow Rate:&#10;0 trips/min">
+                                             <font>
+                                                <Font name="System Bold" size="13.0" />
+                                             </font></TextArea>
                                        </children>
                                     </GridPane>
                               </content>
@@ -196,7 +200,7 @@
                                         <RowConstraints maxHeight="174.0" minHeight="50.0" prefHeight="50.0" valignment="BOTTOM" vgrow="ALWAYS" />
                                       </rowConstraints>
                                        <children>
-                                          <LineChart prefHeight="256.0" prefWidth="219.0">
+                                          <LineChart fx:id="lineChart" animated="false" legendVisible="false" prefHeight="256.0" prefWidth="219.0">
                                             <xAxis>
                                               <CategoryAxis side="BOTTOM" />
                                             </xAxis>
@@ -209,7 +213,7 @@
                                                 <Insets />
                                              </GridPane.margin>
                                           </TextArea>
-                                          <ComboBox fx:id="graphCB" onAction="#updateCB" prefHeight="25.0" prefWidth="288.0" GridPane.rowIndex="1">
+                                          <ComboBox fx:id="graphCB" prefHeight="25.0" prefWidth="288.0" GridPane.rowIndex="1">
                                              <GridPane.margin>
                                                 <Insets bottom="10.0" left="5.0" right="5.0" />
                                              </GridPane.margin>
@@ -309,5 +313,6 @@
           </TitledPane>
         </panes>
       </Accordion>
+      <ScrollBar layoutX="6.0" layoutY="470.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
    </children>
 </AnchorPane>

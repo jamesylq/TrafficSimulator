@@ -11,9 +11,9 @@ import java.util.*;
 public class TrafficLight extends RoadObject implements Iterable, Selectable {
     public int index;
     public double angle;
-    public int YELLOW_DURATION = 100, GREEN_DURATION = 900;
+    public int YELLOW_DURATION = 50, GREEN_DURATION = 450;
     public int RED_DURATION = YELLOW_DURATION + GREEN_DURATION, TICK_CYCLE = RED_DURATION * 2;
-    public static final double ALPHA = Math.atan2(56, 26);
+    public static final double ALPHA = Math.atan2(28, 13);
     public static final double DIAG = Math.sqrt(953) + 5;
     public static final double[] CORNERANGLES = {ALPHA, Math.PI - ALPHA, Math.PI + ALPHA, -ALPHA};
 
@@ -143,6 +143,13 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
 
     public void delete() {
         MainController.mainAnchorPane.getChildren().remove(this.renderPane);
+        for (Obstacle obst: obstacles) {
+            if (obst.end) {
+                obst.road.fwdObjects.remove(obst);
+            } else {
+                obst.road.bckObjects.remove(obst);
+            }
+        }
         this.intersection.trafficLights.remove(this);
         trafficLightList.remove(this);
     }
@@ -167,6 +174,52 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
         MainController.selectedNode = this;
 
         if (this.selected) SelectHandler.display();
+    }
+
+    public static double angleBetw(double angle1, double angle2) {
+        final double theta = Math.abs(angle1 - angle2);
+        return Math.min(theta, Math.TAU - theta);
+    }
+
+    public void sync() {
+        sync(this.intersection);
+    }
+    
+    public static void sync(Intersection inter) {
+        if (inter.adjList.size() == 3) {
+            final double angle0 = inter.trafficLights.get(0).angle;
+            final double angle1 = inter.trafficLights.get(1).angle;
+            final double angle2 = inter.trafficLights.get(2).angle;
+
+            final double angle01 = angleBetw(angle0, angle1), angle12 = angleBetw(angle1, angle2), angle20 = angleBetw(angle2, angle0);
+            final int phase = inter.trafficLights.get(0).phase;
+            final int red = inter.trafficLights.get(0).RED_DURATION;
+
+            if (angle01 >= Math.max(angle12, angle20)) {
+                inter.trafficLights.get(1).phase = phase;
+                inter.trafficLights.get(2).phase = phase + red;
+            } else if (angle12 >= Math.max(angle01, angle20)) {
+                inter.trafficLights.get(1).phase = phase + red;
+                inter.trafficLights.get(2).phase = phase + red;
+            } else {
+                inter.trafficLights.get(1).phase = phase + red;
+                inter.trafficLights.get(2).phase = phase;
+            }
+
+        } else {
+            inter.trafficLights.sort((tl1, tl2) -> (int) (Math.signum(tl1.angle - tl2.angle)));
+            final int phase = inter.trafficLights.get(0).phase;
+            final int red = inter.trafficLights.get(0).RED_DURATION;
+
+            inter.trafficLights.get(1).phase = phase + red;
+            inter.trafficLights.get(2).phase = phase;
+            inter.trafficLights.get(3).phase = phase + red;
+        }
+
+        for (TrafficLight tl: inter.trafficLights) {
+            tl.iterate();
+            tl.render.setImage(TrafficLight.TEXTURES[tl.updateState()]);
+        }
     }
 
     public void setSelect(boolean b) {

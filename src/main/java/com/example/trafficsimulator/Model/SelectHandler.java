@@ -20,41 +20,39 @@ public class SelectHandler implements EventHandler<MouseEvent> {
         deselect();
 
         if (source instanceof Line || source instanceof CubicCurve) {
-            if (MainController.isSimulating) return;
-
             for (Road road: Road.roadList) {
                 if (road.curves.contains(source)) {
-                    (MainController.selectedNode = (Selectable) road).setSelect(true);
+                    (MainController.selectedNode = road).setSelect(true);
                     road.updateDrag();
-                    for (int i = 3; i >= 0; i--) road.curves.get(i).toBack();
-                    MainController.selectedHighlights.getFirst().toBack();
-                    MainController.draggableNodesToFront();
                     MainController.SETTINGS_OBJECTS[0].show();
 
                     break;
                 }
             }
 
-            display();
-
         } else if (source instanceof ImageView) {
             for (TrafficLight trafficLight: TrafficLight.trafficLightList) {
                 if (trafficLight.render == source) {
                     trafficLight.onSelect();
                     trafficLight.setSelect(true);
-                    MainController.SETTINGS_OBJECTS[1].show();
+                    for (int i = 1; i <= 3; i++) MainController.SETTINGS_OBJECTS[i].show();
 
-                    return;
+                    break;
                 }
             }
 
             for (Vehicle vehicle: Vehicle.vehicleList) {
                 if (vehicle.render == source) {
                     vehicle.onSelect();
-                    return;
+                    vehicle.setSelect(true);
+                    MainController.SETTINGS_OBJECTS[4].show();
+
+                    break;
                 }
             }
         }
+
+        display();
     }
 
     public static void display() {
@@ -121,6 +119,14 @@ public class SelectHandler implements EventHandler<MouseEvent> {
             MainController.mainDisplayImageView.setImage(
                 TrafficLight.TEXTURES_CLEAR[((TrafficLight) MainController.selectedNode).currState]
             );
+
+        } else if (MainController.selectedNode instanceof Car) {
+            MainController.mainDisplayImageView.setVisible(true);
+            MainController.mainDisplayImageView.setImage(Car.TEXTURE_CLEAR);
+
+        } else if (MainController.selectedNode instanceof Truck) {
+            MainController.mainDisplayImageView.setVisible(true);
+            MainController.mainDisplayImageView.setImage(Truck.TEXTURE_CLEAR);
         }
     }
 

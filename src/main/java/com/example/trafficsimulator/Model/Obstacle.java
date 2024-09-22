@@ -2,6 +2,7 @@ package com.example.trafficsimulator.Model;
 
 public class Obstacle extends RoadObject {
     RoadObject parent;
+    boolean end;
 
     Obstacle(RoadObject parent, Road road) {
         super(road);
@@ -9,7 +10,9 @@ public class Obstacle extends RoadObject {
 
         if (this.parent instanceof TrafficLight tl) {
             this.roadRelPos = Math.min(0.1, 15 / this.road.length);
-            if (tl.intersection == this.road.end) {
+            this.end = (tl.intersection == this.road.end);
+
+            if (this.end) {
                 this.roadRelPos = 1 - this.roadRelPos;
                 this.road.fwdObjects.add(this);
             } else {

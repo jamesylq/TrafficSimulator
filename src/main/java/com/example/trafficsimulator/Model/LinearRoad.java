@@ -4,7 +4,7 @@ import com.example.trafficsimulator.Controller.MainController;
 import javafx.scene.paint.*;
 import javafx.scene.shape.*;
 
-public class LinearRoad extends Road implements Selectable {
+public class LinearRoad extends Road {
     private double SIN, COS;
 
     public void normal() {

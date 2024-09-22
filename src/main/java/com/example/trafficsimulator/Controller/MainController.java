@@ -7,6 +7,7 @@ import javafx.application.*;
 import javafx.event.*;
 import javafx.fxml.*;
 import javafx.scene.*;
+import javafx.scene.chart.*;
 import javafx.scene.image.*;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
@@ -26,7 +27,7 @@ public class MainController implements Initializable {
     private ComboBox<String> graphCB;
 
     @FXML
-    private TextArea graphTA;
+    private TextArea graphTA, statsTA;
 
     @FXML
     private AnchorPane anchorPane, selectedAnchorPane;
@@ -35,8 +36,6 @@ public class MainController implements Initializable {
     @FXML
     private GridPane settingsGridPane;
     public static GridPane mainSettingsGridPane;
-
-    public static ArrayList<Shape> permaFront = new ArrayList<>();
 
     @FXML
     private Accordion menuAccordion, selectedAccordion;
@@ -58,28 +57,36 @@ public class MainController implements Initializable {
     private ImageView displayImageView;
     public static ImageView mainDisplayImageView;
 
+    @FXML
+    private LineChart<String, Number> lineChart;
+
     public static Stage aboutPage;
     public static GraphEdge[][] dp;
 
-    public static final String[] graphStats = {"Traffic Flow", "Average Vehicle Speed"};
+    public static final String[] graphStats = {"Traffic Flow Rate", "Average Vehicle Speed"};
 
     public static Selectable selectedNode = null;
     public static ArrayList<Shape> selectedHighlights = new ArrayList<>();
     public static boolean isSimulating = false;
     public static final Random random = new Random();
+    public static double avgSpeed;
+    public static long ticksSinceStart = 0;
+    public static int tripsMade = 0;
 
     public static final int FPS = 100;
     public static int SPAWN_VEHICLE_RAND_NUM = FPS;
+    public static int SINCE_LAST_UPDATE_CHART = 0;
+    public static ArrayList<Double> avgSpeedHist = new ArrayList<>(), tripRateHist = new ArrayList<>();
 
     public static final EditableParameter[] SETTINGS_OBJECTS = {
         new EditableParameter(
-            "Road Speed Multiplier",
+            "Road Speed", 0,
             0.1, 1.0, 1.0,
             v -> ((Road) selectedNode).speed = v,
             () -> ((Road) selectedNode).speed
         ),
         new EditableParameter(
-            "Traffic Light Offest",
+            "Traffic Light Offest", 0,
             0.0, 1.0, 0.0,
             v -> {
                 TrafficLight sel = (TrafficLight) selectedNode;
@@ -87,19 +94,49 @@ public class MainController implements Initializable {
 
                 for (TrafficLight tl: sel.intersection.trafficLights) {
                     tl.phase = ((tl.phase + delta) % tl.TICK_CYCLE + tl.TICK_CYCLE) % tl.TICK_CYCLE;
-                    tl.iterate();
                     tl.render.setImage(TrafficLight.TEXTURES[tl.updateState()]);
+                    tl.iterate();
                 }
             },
             () -> (double) ((TrafficLight) selectedNode).phase / ((TrafficLight) selectedNode).TICK_CYCLE
+        ),
+        new EditableParameter(
+            "Green Duration", 1,
+            100, 1000, 450,
+            v -> {
+                TrafficLight sel = (TrafficLight) selectedNode;
+
+                for (TrafficLight tl : sel.intersection.trafficLights) {
+                    tl.GREEN_DURATION = (int) v;
+                    tl.render.setImage(TrafficLight.TEXTURES[tl.updateState()]);
+                    tl.sync();
+                    tl.iterate();
+                }
+            },
+            () -> ((TrafficLight) selectedNode).GREEN_DURATION
+        ),
+        new EditableParameter(
+            "Yellow Duration", 2,
+            10, 100, 50,
+            v -> {
+                TrafficLight sel = (TrafficLight) selectedNode;
+
+                for (TrafficLight tl : sel.intersection.trafficLights) {
+                    tl.YELLOW_DURATION = (int) v;
+                    tl.render.setImage(TrafficLight.TEXTURES[tl.updateState()]);
+                    tl.sync();
+                    tl.iterate();
+                }
+            },
+            () -> ((TrafficLight) selectedNode).YELLOW_DURATION
+        ),
+        new EditableParameter(
+            "Vehicle Speed", 0,
+            0.1, 2.0, 1.0,
+            v -> ((Vehicle) selectedNode).speed = v,
+            () -> ((Vehicle) selectedNode).speed
         )
     };
-
-    @FXML
-    public void updateCB() {
-        int ind = graphCB.getSelectionModel().getSelectedIndex();
-        graphTA.setText(String.format("Current %s: ", graphStats[ind]));
-    }
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -245,41 +282,7 @@ public class MainController implements Initializable {
                                 adj.fwdObjects.sort(Comparator.naturalOrder());
                                 adj.bckObjects.sort(Comparator.reverseOrder());
                             }
-
-                            if (closestIntersect.adjList.size() == 3) {
-                                final double angle0 = closestIntersect.trafficLights.get(0).angle;
-                                final double angle1 = closestIntersect.trafficLights.get(1).angle;
-                                final double angle2 = closestIntersect.trafficLights.get(2).angle;
-
-                                final double angle01 = angleBetw(angle0, angle1), angle12 = angleBetw(angle1, angle2), angle20 = angleBetw(angle2, angle0);
-                                final int phase = closestIntersect.trafficLights.get(0).phase;
-                                final int red = closestIntersect.trafficLights.get(0).RED_DURATION;
-
-                                if (angle01 >= Math.max(angle12, angle20)) {
-                                    closestIntersect.trafficLights.get(1).phase = phase;
-                                    closestIntersect.trafficLights.get(2).phase = phase + red;
-                                } else if (angle12 >= Math.max(angle01, angle20)) {
-                                    closestIntersect.trafficLights.get(1).phase = phase + red;
-                                    closestIntersect.trafficLights.get(2).phase = phase + red;
-                                } else {
-                                    closestIntersect.trafficLights.get(1).phase = phase + red;
-                                    closestIntersect.trafficLights.get(2).phase = phase;
-                                }
-
-                            } else {
-                                closestIntersect.trafficLights.sort((tl1, tl2) -> (int) (Math.signum(tl1.angle - tl2.angle)));
-                                final int phase = closestIntersect.trafficLights.get(0).phase;
-                                final int red = closestIntersect.trafficLights.get(0).RED_DURATION;
-
-                                closestIntersect.trafficLights.get(1).phase = phase + red;
-                                closestIntersect.trafficLights.get(2).phase = phase;
-                                closestIntersect.trafficLights.get(3).phase = phase + red;
-                            }
-
-                            for (TrafficLight tl: closestIntersect.trafficLights) {
-                                tl.iterate();
-                                tl.render.setImage(TrafficLight.TEXTURES[tl.updateState()]);
-                            }
+                            TrafficLight.sync(closestIntersect);
                         }
 
                         e.setDropCompleted(true);
@@ -334,11 +337,6 @@ public class MainController implements Initializable {
         simulationThread.start();
     }
 
-    double angleBetw(double angle1, double angle2) {
-        final double theta = Math.abs(angle1 - angle2);
-        return Math.min(theta, Math.TAU - theta);
-    }
-
     public void updateLayers() {
         if (!menuTP.isExpanded()) menuAccordion.toFront();
         if (!selectedTP.isExpanded()) selectedAccordion.toFront();
@@ -350,7 +348,12 @@ public class MainController implements Initializable {
         for (TrafficLight trafficLight: TrafficLight.trafficLightList) trafficLight.renderPane.toFront();
         for (Intersection intersection: Destination.destinationList) intersection.destinationObj.render.toFront();
         draggableNodesToFront();
-        for (Shape shape: permaFront) shape.toFront();
+
+        if (!selectedHighlights.isEmpty() && selectedHighlights.getFirst() instanceof Polygon) {
+            for (Shape s: selectedHighlights) {
+                s.toFront();
+            }
+        }
 
         if (menuTP.isExpanded()) menuAccordion.toFront();
         if (selectedTP.isExpanded()) selectedAccordion.toFront();
@@ -403,6 +406,9 @@ public class MainController implements Initializable {
                 alertError("Invalid Layout!", "Too little destinations!", "At least 2 destinations are required to be placed on intersections!");
                 return;
             }
+
+            ticksSinceStart = 0;
+            tripsMade = 0;
 
             final int N = Intersection.intersectionList.size();
 
@@ -545,6 +551,14 @@ public class MainController implements Initializable {
             while (!selectedRoad.getEnd().trafficLights.isEmpty()) {
                 selectedRoad.getEnd().trafficLights.getFirst().delete();
             }
+
+        } else if (selectedNode instanceof TrafficLight trafficLight) {
+            while (!trafficLight.intersection.trafficLights.isEmpty()) {
+                trafficLight.intersection.trafficLights.getFirst().delete();
+            }
+
+        } else if (selectedNode instanceof Vehicle vehicle) {
+            vehicle.delete();
         }
 
         SelectHandler.deselect();
@@ -656,6 +670,8 @@ public class MainController implements Initializable {
 
                 if (vWrap instanceof CarWrapper carWrap) {
                     vehicle = new Car(roadAt(carWrap.road));
+                } else if (vWrap instanceof TruckWrapper truckWrap) {
+                    vehicle = new Truck(roadAt(truckWrap.road));
                 }
 
                 vehicle.prev = intAt(vWrap.prev);
@@ -716,6 +732,30 @@ public class MainController implements Initializable {
         SelectHandler.display();
     }
 
+    @FXML
+    public void highlightCongestion() {
+        Road congestedRoad = null;
+        double congestion = -1;
+
+        for (Road road: Road.roadList) {
+            if (road.getCongestion() > congestion) {
+                congestion = road.congestion;
+                congestedRoad = road;
+            }
+        }
+
+        if (congestedRoad == null) {
+            alertInfo("Ineffective Operation!", "There are no active roads!", "Try running the simulation and waiting for vehicles to spawn!");
+            return;
+        }
+
+        SelectHandler.deselect();
+        (MainController.selectedNode = congestedRoad).setSelect(true);
+        congestedRoad.updateDrag();
+        MainController.SETTINGS_OBJECTS[0].show();
+        SelectHandler.display();
+    }
+
     public void tick() {
         Platform.runLater(() -> {
             if (new File("savefiles").mkdirs()) {
@@ -725,12 +765,45 @@ public class MainController implements Initializable {
 
         try {
             while (true) {
+                avgSpeed = 0;
+                int count = 0;
+
+                for (Vehicle vehicle: Vehicle.vehicleList) {
+                    if (vehicle.currSpeed >= 0) {
+                        avgSpeed += vehicle.currSpeed;
+                        count++;
+                    }
+                }
+
+                if (count == 0) avgSpeed = -1;
+                else avgSpeed /= count;
+
+                Platform.runLater(() -> statsTA.setText(String.format(
+                    "Statistics of the Current Save File:\n\n\n" +
+                        "Number of Vehicles:\n%d\n\n" +
+                        "Number of Roads:\n%d\n\n" +
+                        "Number of Intersections:\n%d\n\n" +
+                        "Number of Destinations: \n%d\n\n" +
+                        "Average Speed of Cars:\n%s pixels/s\n\n" +
+                        "Traffic Flow Rate:\n%s trips/min",
+                    Vehicle.vehicleList.size(),
+                    Road.roadList.size(),
+                    Intersection.intersectionList.size(),
+                    Destination.destinationList.size(),
+                    (avgSpeed < 0 ? "-" : String.format("%.2f", avgSpeed)),
+                    (ticksSinceStart == 0 ? "-" : String.format("%.2f", (double) tripsMade * FPS / ticksSinceStart * 60))
+                )));
+
                 if (isSimulating) {
                     Platform.runLater(() -> {
                         if (random.nextInt(SPAWN_VEHICLE_RAND_NUM) == 0) {
                             Intersection start = Vehicle.generateTarget();
                             for (Road road: start.adjList.keySet()) {
-                                new Car(road, start);
+                                if (random.nextInt(10) >= 3) {
+                                    new Car(road, start);
+                                } else {
+                                    new Truck(road, start);
+                                }
                             }
                         }
 
@@ -747,9 +820,45 @@ public class MainController implements Initializable {
 
                 } else {
                     Platform.runLater(() -> {
+                        deleteSelBtn.setDisable(selectedNode == null);
+                        disconnectSelBtn.setDisable(!(selectedNode instanceof Road));
+
                         for (Vehicle vehicle: Vehicle.vehicleList) vehicle.updateRender();
                         for (TrafficLight trafficLight: TrafficLight.trafficLightList) trafficLight.updateRender();
                         updateLayers();
+                    });
+                }
+
+                ticksSinceStart++;
+                if (++SINCE_LAST_UPDATE_CHART >= FPS / 2) {
+                    SINCE_LAST_UPDATE_CHART = 0;
+                    if (avgSpeed >= 0) avgSpeedHist.add(avgSpeed);
+                    tripRateHist.add((double) tripsMade * FPS / ticksSinceStart * 60);
+
+                    if (avgSpeedHist.size() > 20) avgSpeedHist.removeFirst();
+                    if (tripRateHist.size() > 20) tripRateHist.removeFirst();
+
+                    Platform.runLater(() -> {
+                        lineChart.getData().clear();
+                        XYChart.Series<String, Number> series = new XYChart.Series<>();
+                        int ind = graphCB.getSelectionModel().getSelectedIndex();
+                        StringBuilder str = new StringBuilder(String.format("Current %s: ", graphStats[ind]));
+
+                        if (ind == 0) {
+                            for (int i = 0; i < tripRateHist.size(); i++) {
+                                series.getData().add(new XYChart.Data<>(Integer.toString(i), tripRateHist.get(i)));
+                            }
+                            str.append(String.format("%.2f", tripRateHist.getLast()));
+
+                        } else {
+                            for (int i = 0; i < avgSpeedHist.size(); i++) {
+                                series.getData().add(new XYChart.Data<>(Integer.toString(i), avgSpeedHist.get(i)));
+                            }
+                            str.append(String.format("%.2f", avgSpeedHist.getLast()));
+                        }
+
+                        graphTA.setText(str.toString());
+                        lineChart.getData().add(series);
                     });
                 }
 

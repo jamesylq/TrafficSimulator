@@ -5,12 +5,11 @@ import java.util.*;
 import com.example.trafficsimulator.Controller.MainController;
 import javafx.scene.shape.*;
 
-public abstract class Road implements Iterable {
+public abstract class Road implements Iterable, Selectable {
     public int index;
     public boolean selected = false;
-    public double speed = 1.0;
-    protected double length;
-    protected double weight;
+    public double speed = 1.0, congestion;
+    protected double length, weight;
 
     protected Intersection start, end;
     public ArrayList<RoadObject> fwdObjects = new ArrayList<>(), bckObjects = new ArrayList<>();
@@ -77,4 +76,33 @@ public abstract class Road implements Iterable {
     public abstract Point derivative(double roadRelPos);
 
     public abstract double getDistance(double roadRelPos1, double roadRelPos2);
+
+    public double getCongestion() {
+        int numv = 0;
+        double sumSpeed = 0;
+
+        for (RoadObject ro: fwdObjects) {
+            if (ro instanceof Vehicle v) {
+                if (v.speed >= 0) {
+                    numv++;
+                    sumSpeed += v.speed;
+                }
+            }
+        }
+
+        for (RoadObject ro: bckObjects) {
+            if (ro instanceof Vehicle v) {
+                if (v.speed >= 0) {
+                    numv++;
+                    sumSpeed += v.speed;
+                }
+            }
+        }
+
+        if (numv == 0) return congestion = 0;
+        if (sumSpeed == 0) return congestion = Double.MAX_VALUE;
+        return congestion = Math.sqrt(speed) / sumSpeed * numv;
+    }
+
+    public abstract void onSelect();
 }

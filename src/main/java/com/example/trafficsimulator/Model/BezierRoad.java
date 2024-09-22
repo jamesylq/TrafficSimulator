@@ -8,7 +8,7 @@ import javafx.scene.shape.*;
 
 import java.util.*;
 
-public class BezierRoad extends Road implements Selectable {
+public class BezierRoad extends Road {
     private Circle weightStart, weightEnd;
     public static ArrayList<Circle> weights = new ArrayList<>();
     public static ArrayList<BezierRoad> bezierRoadList = new ArrayList<>();
@@ -233,9 +233,9 @@ public class BezierRoad extends Road implements Selectable {
         MainController.selectedHighlights.clear();
         MainController.mainAnchorPane.getChildren().add(highlight);
         MainController.selectedHighlights.add(highlight);
-        
-        weightStart.setVisible(true);
-        weightEnd.setVisible(true);
+
+        weightStart.setVisible(!MainController.isSimulating);
+        weightEnd.setVisible(!MainController.isSimulating);
     }
 
     public void setSelect(boolean b) {

@@ -16,11 +16,13 @@ public class EditableParameter {
     public boolean visible = false;
     private ObservableSetting onUpdate;
 
-    public EditableParameter(String name, double minVal, double maxVal, double defaultVal, UpdatableSetting lambda, ObservableSetting lambda2) {
+    public EditableParameter(String name, int ind, double minVal, double maxVal, double defaultVal, UpdatableSetting lambda, ObservableSetting lambda2) {
+        this.ind = ind;
+
         slider = new Slider(minVal, maxVal, defaultVal);
         slider.valueProperty().addListener(e -> {
             lambda.update(slider.getValue());
-            valueLabel.setText(Double.toString(slider.getValue()));
+            valueLabel.setText(String.format("%.2f", slider.getValue()));
         });
 
         settingName = new Label(name);

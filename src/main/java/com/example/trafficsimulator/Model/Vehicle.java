@@ -72,7 +72,6 @@ public abstract class Vehicle extends RoadObject implements Iterable, Selectable
         MainController.mainAnchorPane.getChildren().remove(this.renderPane);
         this.deleted = true;
         getRoadObjects().remove(this);
-//        Vehicle.vehicleList.remove(this);
     }
 
     public void updateRender() {
@@ -126,20 +125,20 @@ public abstract class Vehicle extends RoadObject implements Iterable, Selectable
 
         double distance = road.getDistance(roadRelPos, isFwd() ? 1 : 0);
 
-        Road curRoad;
-        GraphEdge graphEdge;
         Intersection cur = this.next;
+        GraphEdge graphEdge = MainController.dp[cur.index][this.target.index];
+        Road curRoad = graphEdge.edge;
+        cur = graphEdge.adj;
 
-        do {
+        while (curRoad != roadObject.road) {
             if (cur.index == this.target.index) throw new IllegalArgumentException("Object not sighted!");
 
             graphEdge = MainController.dp[cur.index][this.target.index];
             curRoad = graphEdge.edge;
             cur = graphEdge.adj;
 
-            distance += graphEdge.dist;
-
-        } while (curRoad != roadObject.road);
+            distance += graphEdge.edge.calculateLength();
+        }
 
         return distance + curRoad.getDistance(graphEdge.isFwd() ? 0 : 1, roadObject.roadRelPos);
     }
@@ -179,6 +178,14 @@ public abstract class Vehicle extends RoadObject implements Iterable, Selectable
             }
             cur = graphEdge.adj;
         }
+
+        System.out.println(getDistance(nextCollidable()));
+        RoadObject ro = nextCollidable();
+        Circle c = new Circle(50);
+        c.setStroke(Color.AQUA);
+        c.centerXProperty().bind(ro.renderPane.layoutXProperty().add(ro.MAXSIDE / 2));
+        c.centerYProperty().bind(ro.renderPane.layoutYProperty().add(ro.MAXSIDE / 2));
+        MainController.mainAnchorPane.getChildren().add(c);
     }
 
     public void addToRoad() {

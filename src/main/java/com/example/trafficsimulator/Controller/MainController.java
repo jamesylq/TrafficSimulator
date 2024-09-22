@@ -32,6 +32,10 @@ public class MainController implements Initializable {
     private AnchorPane anchorPane, selectedAnchorPane;
     public static AnchorPane mainAnchorPane, mainSelectedAnchorPane;
 
+    @FXML
+    private GridPane settingsGridPane;
+    public static GridPane mainSettingsGridPane;
+
     public static ArrayList<Shape> permaFront = new ArrayList<>();
 
     @FXML
@@ -51,14 +55,6 @@ public class MainController implements Initializable {
     public static Node[] disableOnSimulate;
 
     @FXML
-    private Label settingL1, settingL2, settingL3, settingL4;
-    public static Label MSL1, MSL2, MSL3, MSL4;
-
-    @FXML
-    private Slider settingS1, settingS2, settingS3, settingS4;
-    public static Slider MSS1, MSS2, MSS3, MSS4;
-
-    @FXML
     private ImageView displayImageView;
     public static ImageView mainDisplayImageView;
 
@@ -68,12 +64,36 @@ public class MainController implements Initializable {
     public static final String[] graphStats = {"Traffic Flow", "Average Vehicle Speed"};
 
     public static Selectable selectedNode = null;
-    public static Shape selectedHighlight = null;
+    public static ArrayList<Shape> selectedHighlights = new ArrayList<>();
     public static boolean isSimulating = false;
     public static final Random random = new Random();
 
     public static final int FPS = 100;
     public static int SPAWN_VEHICLE_RAND_NUM = FPS / 2;
+
+    public static final EditableParameter[] SETTINGS_OBJECTS = {
+        new EditableParameter(
+            "Road Speed Multiplier",
+            0.1, 1.0, 1.0,
+            v -> ((Road) selectedNode).speed = v,
+            () -> ((Road) selectedNode).speed
+        ),
+        new EditableParameter(
+            "Traffic Light Offest",
+            0.0, 1.0, 0.0,
+            v -> {
+                TrafficLight sel = (TrafficLight) selectedNode;
+                final int delta = (int) (v * sel.TICK_CYCLE) - sel.phase;
+
+                for (TrafficLight tl: sel.intersection.trafficLights) {
+                    tl.phase = ((tl.phase + delta) % tl.TICK_CYCLE + tl.TICK_CYCLE) % tl.TICK_CYCLE;
+                    tl.iterate();
+                    tl.render.setImage(TrafficLight.TEXTURES[tl.updateState()]);
+                }
+            },
+            () -> (double) ((TrafficLight) selectedNode).phase / ((TrafficLight) selectedNode).TICK_CYCLE
+        )
+    };
 
     @FXML
     public void updateCB() {
@@ -85,15 +105,8 @@ public class MainController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         mainAnchorPane = anchorPane;
         mainDisplayImageView = displayImageView;
+        mainSettingsGridPane = settingsGridPane;
         mainSelectedAnchorPane = selectedAnchorPane;
-        MSL1 = settingL1;
-        MSL2 = settingL2;
-        MSL3 = settingL3;
-        MSL4 = settingL4;
-        MSS1 = settingS1;
-        MSS2 = settingS2;
-        MSS3 = settingS3;
-        MSS4 = settingS4;
 
         disableOnSimulate = new Node[] {disconnectSelBtn, deleteSelBtn, clearBtn, loadBtn, saveBtn, templateImg1, templateImg2, templateImg3, templateImg4, templateImg5};
 
@@ -179,7 +192,6 @@ public class MainController implements Initializable {
                         updateLayers();
                         break;
                 }
-
             }
         });
 
@@ -225,9 +237,44 @@ public class MainController implements Initializable {
                         Intersection closestIntersect = Intersection.closestIntersection(50, new Point(e.getX(), e.getY()));
                         if (closestIntersect == null) {
                             alertError("Invalid Placement!", "Traffic lights can only be placed on intersections!", "Try dragging a traffic light onto an intersection!");
+                        } else if (closestIntersect.adjList.size() <= 2) {
+                            alertError("Invalid Placement!", "Traffic lights can only be placed on intersections of 3 or more roads!", "Try connecting more roads to your intersection!");
                         } else {
-                            for (Road adj: closestIntersect.adjList.keySet()) {
-                                new TrafficLight(adj, closestIntersect);
+                            for (Road adj: closestIntersect.adjList.keySet()) new TrafficLight(adj, closestIntersect);
+
+                            if (closestIntersect.adjList.size() == 3) {
+                                final double angle0 = closestIntersect.trafficLights.get(0).angle;
+                                final double angle1 = closestIntersect.trafficLights.get(1).angle;
+                                final double angle2 = closestIntersect.trafficLights.get(2).angle;
+
+                                final double angle01 = angleBetw(angle0, angle1), angle12 = angleBetw(angle1, angle2), angle20 = angleBetw(angle2, angle0);
+                                final int phase = closestIntersect.trafficLights.get(0).phase;
+                                final int red = closestIntersect.trafficLights.get(0).RED_DURATION;
+
+                                if (angle01 >= Math.max(angle12, angle20)) {
+                                    closestIntersect.trafficLights.get(1).phase = phase;
+                                    closestIntersect.trafficLights.get(2).phase = phase + red;
+                                } else if (angle12 >= Math.max(angle01, angle20)) {
+                                    closestIntersect.trafficLights.get(1).phase = phase + red;
+                                    closestIntersect.trafficLights.get(2).phase = phase + red;
+                                } else {
+                                    closestIntersect.trafficLights.get(1).phase = phase + red;
+                                    closestIntersect.trafficLights.get(2).phase = phase;
+                                }
+
+                            } else {
+                                closestIntersect.trafficLights.sort((tl1, tl2) -> (int) (Math.signum(tl1.angle - tl2.angle)));
+                                final int phase = closestIntersect.trafficLights.get(0).phase;
+                                final int red = closestIntersect.trafficLights.get(0).RED_DURATION;
+
+                                closestIntersect.trafficLights.get(1).phase = phase + red;
+                                closestIntersect.trafficLights.get(2).phase = phase;
+                                closestIntersect.trafficLights.get(3).phase = phase + red;
+                            }
+
+                            for (TrafficLight tl: closestIntersect.trafficLights) {
+                                tl.iterate();
+                                tl.render.setImage(TrafficLight.TEXTURES[tl.updateState()]);
                             }
                         }
 
@@ -277,11 +324,15 @@ public class MainController implements Initializable {
             }
         });
 
-
         Runnable simulation = this::tick;
         Thread simulationThread = new Thread(simulation);
         simulationThread.setDaemon(true);
         simulationThread.start();
+    }
+
+    double angleBetw(double angle1, double angle2) {
+        final double theta = Math.abs(angle1 - angle2);
+        return Math.min(theta, Math.TAU - theta);
     }
 
     public void updateLayers() {
@@ -681,7 +732,7 @@ public class MainController implements Initializable {
                         for (Vehicle vehicle: Vehicle.vehicleList) vehicle.iterate();
                         for (TrafficLight trafficLight: TrafficLight.trafficLightList) trafficLight.iterate();
                         updateLayers();
-                        TrafficLight.globalTick = ++TrafficLight.globalTick % TrafficLight.TICK_CYCLE;
+                        TrafficLight.globalTick = ++TrafficLight.globalTick;
 
                         ArrayList<Vehicle> remVehicles = new ArrayList<>();
                         for (Vehicle vehicle: Vehicle.vehicleList) if (!vehicle.deleted) remVehicles.add(vehicle);

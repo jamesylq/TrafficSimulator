@@ -96,11 +96,13 @@ public class LinearRoad extends Road implements Selectable {
         Line highlight = new Line(start.getX(), start.getY(), end.getX(), end.getY());
         highlight.setStroke(Color.AQUA);
         highlight.setStrokeWidth(55);
-        if (MainController.selectedHighlight != null) {
-            MainController.mainAnchorPane.getChildren().remove(MainController.selectedHighlight);
+
+        if (!MainController.selectedHighlights.isEmpty()) {
+            MainController.mainAnchorPane.getChildren().removeAll(MainController.selectedHighlights);
         }
+        MainController.selectedHighlights.clear();
         MainController.mainAnchorPane.getChildren().add(highlight);
-        MainController.selectedHighlight = highlight;
+        MainController.selectedHighlights.add(highlight);
     }
 
     public void setSelect(boolean b) {

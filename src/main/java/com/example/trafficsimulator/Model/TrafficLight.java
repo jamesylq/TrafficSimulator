@@ -10,8 +10,9 @@ import java.util.*;
 
 public class TrafficLight extends RoadObject implements Iterable, Selectable {
     public int index;
-    public static final int RED_DURATION = 1000, YELLOW_DURATION = 100, GREEN_DURATION = 900;
-    public static final int TICK_CYCLE = RED_DURATION + YELLOW_DURATION + GREEN_DURATION;
+    public double angle;
+    public int YELLOW_DURATION = 100, GREEN_DURATION = 900;
+    public int RED_DURATION = YELLOW_DURATION + GREEN_DURATION, TICK_CYCLE = RED_DURATION * 2;
     public static final double ALPHA = Math.atan2(56, 26);
     public static final double DIAG = Math.sqrt(953) + 5;
     public static final double[] CORNERANGLES = {ALPHA, Math.PI - ALPHA, Math.PI + ALPHA, -ALPHA};
@@ -31,15 +32,16 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
     public static ArrayList<TrafficLight> trafficLightList = new ArrayList<>();
 
     public int phase, tick;
-    public static int globalTick = 0;
+    public static long globalTick = 0;
     public int currState;
     public Intersection intersection;
     public double renderRoadRelPos, rx, ry;
     public boolean selected = false;
+    public static final Random random = new Random();
 
 
     public TrafficLight(Road road, Intersection intersection) {
-        this(road, intersection, (int) ((new Random()).nextDouble() * TICK_CYCLE));
+        this(road, intersection, -1);
     }
 
     public TrafficLight(Road road, Intersection intersection, int phase) {
@@ -51,18 +53,22 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
         HEIGHT = 60;
 
         this.road = road;
-        this.phase = phase;
+        this.phase = (phase < 0 ? random.nextInt(TICK_CYCLE) : phase);
         this.intersection = intersection;
         updateState();
 
-        this.roadRelPos = (this.road.end == this.intersection ? 1 - 1e-4 : 1e-4);
+        this.roadRelPos = (isFront() ? 1e-4 : 1 - 1e-4);
+        this.angle = this.road.getAngle(this.roadRelPos);
+        if (!isFront()) this.angle -= Math.PI;
+        this.angle = (this.angle % Math.TAU + Math.TAU) % Math.TAU;
+
         this.road.fwdObjects.add(this);
         this.road.bckObjects.add(this);
         this.road.fwdObjects.sort(Comparator.naturalOrder());
         this.road.bckObjects.sort(Comparator.reverseOrder());
 
         this.renderRoadRelPos = Math.min(0.1, 50 / this.road.length);
-        if (this.road.end == this.intersection) this.renderRoadRelPos = 1 - this.renderRoadRelPos;
+        if (!isFront()) this.renderRoadRelPos = 1 - this.renderRoadRelPos;
         getPoint();
 
         trafficLightList.add(this);
@@ -75,7 +81,14 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
         updateRender();
     }
 
+    public boolean isFront() {
+        return this.road.start == this.intersection;
+    }
+
     public int updateState() {
+        RED_DURATION = GREEN_DURATION + YELLOW_DURATION;
+        TICK_CYCLE = RED_DURATION * 2;
+
         if (tick < GREEN_DURATION) {
             collidable = false;
             return currState = 0;
@@ -102,7 +115,7 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
     }
 
     public void iterate() {
-        tick = ((globalTick + phase) % TICK_CYCLE + TICK_CYCLE) % TICK_CYCLE;
+        tick = ((int) ((globalTick + phase) % TICK_CYCLE) + TICK_CYCLE) % TICK_CYCLE;
 
         if (tick == 0 || tick == GREEN_DURATION || tick == GREEN_DURATION + YELLOW_DURATION) {
             render.setImage(TEXTURES[updateState()]);
@@ -138,12 +151,12 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
         highlight.setStroke(Color.AQUA);
         highlight.setStrokeWidth(3);
 
-        if (MainController.selectedHighlight != null) {
-            MainController.mainAnchorPane.getChildren().remove(MainController.selectedHighlight);
+        if (!MainController.selectedHighlights.isEmpty()) {
+            MainController.mainAnchorPane.getChildren().removeAll(MainController.selectedHighlights);
         }
-
+        MainController.selectedHighlights.clear();
         MainController.mainAnchorPane.getChildren().add(highlight);
-        MainController.selectedHighlight = highlight;
+        MainController.selectedHighlights.add(highlight);
         MainController.selectedNode = this;
 
         if (this.selected) SelectHandler.display();

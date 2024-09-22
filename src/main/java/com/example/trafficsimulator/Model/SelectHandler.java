@@ -27,17 +27,9 @@ public class SelectHandler implements EventHandler<MouseEvent> {
                     (MainController.selectedNode = (Selectable) road).setSelect(true);
                     road.updateDrag();
                     for (int i = 3; i >= 0; i--) road.curves.get(i).toBack();
-                    MainController.selectedHighlight.toBack();
+                    MainController.selectedHighlights.getFirst().toBack();
                     MainController.draggableNodesToFront();
-
-                    MainController.MSL1.setText("Road Speed");
-                    MainController.MSS1.setMin(0.1);
-                    MainController.MSS1.setMax(1);
-                    MainController.MSS1.setValue(road.speed);
-                    MainController.MSS1.setVisible(true);
-                    MainController.MSS2.setVisible(false);
-                    MainController.MSS3.setVisible(false);
-                    MainController.MSS4.setVisible(false);
+                    MainController.SETTINGS_OBJECTS[0].show();
 
                     break;
                 }
@@ -50,6 +42,7 @@ public class SelectHandler implements EventHandler<MouseEvent> {
                 if (trafficLight.render == source) {
                     trafficLight.onSelect();
                     trafficLight.setSelect(true);
+                    MainController.SETTINGS_OBJECTS[1].show();
 
                     return;
                 }
@@ -62,7 +55,6 @@ public class SelectHandler implements EventHandler<MouseEvent> {
                 }
             }
         }
-
     }
 
     public static void display() {
@@ -133,11 +125,13 @@ public class SelectHandler implements EventHandler<MouseEvent> {
     }
 
     public static void deselect() {
+        EditableParameter.clear();
+
         MainController.mainDisplayImageView.setVisible(false);
         if (MainController.selectedNode != null) {
             MainController.selectedNode.setSelect(false);
-            MainController.mainAnchorPane.getChildren().remove(MainController.selectedHighlight);
-            MainController.selectedHighlight = null;
+            MainController.mainAnchorPane.getChildren().removeAll(MainController.selectedHighlights);
+            MainController.selectedHighlights.clear();
             MainController.selectedNode = null;
         }
 

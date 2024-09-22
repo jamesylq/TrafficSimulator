@@ -227,12 +227,13 @@ public class BezierRoad extends Road implements Selectable {
         highlight.setFill(Color.TRANSPARENT);
         highlight.setStroke(Color.AQUA);
         highlight.setStrokeWidth(55);
-        if (MainController.selectedHighlight != null) {
-            MainController.mainAnchorPane.getChildren().remove(MainController.selectedHighlight);
+        if (!MainController.selectedHighlights.isEmpty()) {
+            MainController.mainAnchorPane.getChildren().removeAll(MainController.selectedHighlights);
         }
+        MainController.selectedHighlights.clear();
         MainController.mainAnchorPane.getChildren().add(highlight);
-        MainController.selectedHighlight = highlight;
-
+        MainController.selectedHighlights.add(highlight);
+        
         weightStart.setVisible(true);
         weightEnd.setVisible(true);
     }

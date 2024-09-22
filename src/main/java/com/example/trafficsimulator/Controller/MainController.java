@@ -3,8 +3,8 @@ package com.example.trafficsimulator.Controller;
 import com.example.trafficsimulator.MainApplication;
 import com.example.trafficsimulator.Model.*;
 
-import javafx.application.Platform;
-import javafx.event.ActionEvent;
+import javafx.application.*;
+import javafx.event.*;
 import javafx.fxml.*;
 import javafx.scene.*;
 import javafx.scene.image.*;
@@ -13,10 +13,13 @@ import javafx.scene.layout.*;
 import javafx.scene.control.*;
 import javafx.scene.shape.*;
 import javafx.stage.*;
+import javafx.stage.FileChooser.*;
 
 import java.io.*;
 import java.net.*;
+import java.time.*;
 import java.util.*;
+import java.time.format.*;
 
 public class MainController implements Initializable {
     @FXML
@@ -44,7 +47,7 @@ public class MainController implements Initializable {
     private ImageView templateImg1, templateImg2, templateImg3, templateImg4, templateImg5;
 
     @FXML
-    private Button simulateBtn, disconnectRoadBtn, deleteRoadBtn, clearBtn, loadBtn, saveBtn;
+    private Button simulateBtn, disconnectSelBtn, deleteSelBtn, clearBtn, loadBtn, saveBtn;
     public static Node[] disableOnSimulate;
 
     @FXML
@@ -62,7 +65,7 @@ public class MainController implements Initializable {
     public static Stage aboutPage;
     public static GraphEdge[][] dp;
 
-    final String[] graphStats = {"Traffic Flow", "Average Vehicle Speed"};
+    public static final String[] graphStats = {"Traffic Flow", "Average Vehicle Speed"};
 
     public static Selectable selectedNode = null;
     public static Shape selectedHighlight = null;
@@ -92,7 +95,7 @@ public class MainController implements Initializable {
         MSS3 = settingS3;
         MSS4 = settingS4;
 
-        disableOnSimulate = new Node[] {disconnectRoadBtn, deleteRoadBtn, clearBtn, loadBtn, saveBtn, templateImg1, templateImg2, templateImg3, templateImg4, templateImg5};
+        disableOnSimulate = new Node[] {disconnectSelBtn, deleteSelBtn, clearBtn, loadBtn, saveBtn, templateImg1, templateImg2, templateImg3, templateImg4, templateImg5};
 
         graphCB.getItems().addAll(graphStats);
         graphCB.getSelectionModel().selectFirst();
@@ -448,19 +451,6 @@ public class MainController implements Initializable {
                 anchorPane.getChildren().add(end.circleObj);
             }
 
-//            Intersection start = new Intersection(selectedRoad.getPoint(selectedRoad.getStart().adjList.isEmpty() ? 0.0 : 0.1));
-//            Intersection end = new Intersection(selectedRoad.getPoint(selectedRoad.getEnd().adjList.isEmpty() ? 1.0 : 0.9));
-//
-//            changeAllVehicleNode(selectedRoad.getStart(), start);
-//            changeAllVehicleNode(selectedRoad.getEnd(), end);
-//
-//            selectedRoad.setStart(start);
-//            selectedRoad.setEnd(end);
-//            start.add(selectedRoad, end);
-//            end.add(selectedRoad, start);
-
-//            anchorPane.getChildren().addAll(start.circleObj, end.circleObj);
-
             selectedRoad.updateDrag();
             updateLayers();
         }
@@ -514,10 +504,19 @@ public class MainController implements Initializable {
         alert.showAndWait();
     }
 
+    public static void alertInfo(String title, String header, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+        alert.show();
+    }
+
     @FXML
     public void saveGraph() {
         try {
-            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("savefiles/save.txt"));
+            String filename = String.format("%s.txt", DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now()));
+            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("savefiles/" + filename));
             out.writeObject(new Arrangement());
             out.close();
 
@@ -526,6 +525,8 @@ public class MainController implements Initializable {
             VehicleWrapper.processedVehicles.clear();
             TrafficLightWrapper.processedTrafficLights.clear();
             DestinationWrapper.processedDestinations.clear();
+            
+            alertInfo("File Created!", "Savefile successfully created!", String.format("Your savefile is saved under the name %s.", filename));
             
         } catch (IOException e) {
             e.printStackTrace();
@@ -545,7 +546,18 @@ public class MainController implements Initializable {
         clearGraph();
 
         try {
-            ObjectInputStream input = new ObjectInputStream(new FileInputStream("savefiles/save.txt"));
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Select Savefile");
+            fileChooser.setInitialDirectory(new File("savefiles"));
+            fileChooser.getExtensionFilters().add(new ExtensionFilter("Text Files", "*.txt"));
+            File selectedFile = fileChooser.showOpenDialog(anchorPane.getScene().getWindow());
+
+            if (selectedFile == null) {
+                alertError("File Selection Error!", "No file selected!", "Try selecting a TrafficSimulator .txt save file!");
+                return;
+            }
+
+            ObjectInputStream input = new ObjectInputStream(new FileInputStream(selectedFile));
             Arrangement arrangement = (Arrangement) input.readObject();
             input.close();
 
@@ -648,6 +660,12 @@ public class MainController implements Initializable {
     }
 
     public void tick() {
+        Platform.runLater(() -> {
+            if (new File("savefiles").mkdirs()) {
+                alertInfo("Directory created!", "Directory \"savefiles\" generated!", "This will be the location where your savefiles read and write to.");
+            }
+        });
+
         try {
             while (true) {
                 if (isSimulating) {

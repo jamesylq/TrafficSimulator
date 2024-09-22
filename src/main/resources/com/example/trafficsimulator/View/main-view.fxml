@@ -252,14 +252,14 @@
                                        <children>
                                       <AnchorPane fx:id="selectedAnchorPane" maxHeight="250.0" minHeight="250.0" minWidth="0.0" prefHeight="230.0" prefWidth="210.0">
                                              <children>
-                                                <ImageView fx:id="displayImageView" fitHeight="128.0" fitWidth="128.0" layoutX="-1.0" pickOnBounds="true" preserveRatio="true" smooth="false" AnchorPane.bottomAnchor="61.0" AnchorPane.leftAnchor="51.0" AnchorPane.rightAnchor="51.0" AnchorPane.topAnchor="61.0" />
+                                                <ImageView fx:id="displayImageView" fitHeight="192.0" fitWidth="192.0" layoutX="-1.0" pickOnBounds="true" preserveRatio="true" smooth="false" AnchorPane.leftAnchor="19.0" AnchorPane.topAnchor="29.0" />
                                              </children></AnchorPane>
-                                          <Button fx:id="disconnectRoadBtn" mnemonicParsing="false" onAction="#disconnectSelected" prefHeight="25.0" prefWidth="210.0" styleClass="button-style-2" text="Disconnect Road" GridPane.rowIndex="1">
+                                          <Button fx:id="disconnectSelBtn" mnemonicParsing="false" onAction="#disconnectSelected" prefHeight="25.0" prefWidth="210.0" styleClass="button-style-2" text="Disconnect Selected" GridPane.rowIndex="1">
                                              <GridPane.margin>
                                                 <Insets left="10.0" right="10.0" />
                                              </GridPane.margin>
                                           </Button>
-                                          <Button fx:id="deleteRoadBtn" mnemonicParsing="false" onAction="#deleteSelected" prefHeight="25.0" prefWidth="210.0" styleClass="button-style" text="Delete Road" GridPane.rowIndex="2">
+                                          <Button fx:id="deleteSelBtn" mnemonicParsing="false" onAction="#deleteSelected" prefHeight="25.0" prefWidth="210.0" styleClass="button-style" text="Delete Selected" GridPane.rowIndex="2">
                                              <GridPane.margin>
                                                 <Insets left="10.0" right="10.0" />
                                              </GridPane.margin>

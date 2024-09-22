@@ -22,9 +22,11 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="anchorPane" maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minHeight="400.0" minWidth="700.0" prefHeight="491.0" prefWidth="700.0" style="-fx-background-color: #666666;" stylesheets="@../style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.trafficsimulator.Controller.MainController">
+
+<AnchorPane maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minHeight="400.0" minWidth="700.0" prefHeight="491.0" prefWidth="700.0" style="-fx-background-color: #666666;" stylesheets="@../style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.trafficsimulator.Controller.MainController">
    <children>
       <Accordion fx:id="menuAccordion" maxWidth="250.0" prefHeight="400.0" prefWidth="250.0" AnchorPane.bottomAnchor="15.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
         <panes>
@@ -183,7 +185,8 @@
                                           <TextArea fx:id="statsTA" editable="false" maxHeight="360.0" minHeight="360.0" prefHeight="360.0" prefWidth="230.0" styleClass="text-area" stylesheets="@../style.css" text="Statistics of the Current Save File:&#10;&#10;&#10;Number of Vehicles:&#10;0&#10;&#10;Number of Roads:&#10;0&#10;&#10;Number of Intersections:&#10;0&#10;&#10;Average Speed of Cars:&#10;-&#10;&#10;Traffic Flow Rate:&#10;0 trips/min">
                                              <font>
                                                 <Font name="System Bold" size="13.0" />
-                                             </font></TextArea>
+                                             </font>
+                                          </TextArea>
                                        </children>
                                     </GridPane>
                               </content>
@@ -230,7 +233,7 @@
           </TitledPane>
         </panes>
       </Accordion>
-      <ScrollBar layoutX="679.0" layoutY="174.0" orientation="VERTICAL" AnchorPane.bottomAnchor="15.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+      <ScrollBar layoutX="679.0" layoutY="174.0" max="1000.0" min="-1000.0" orientation="VERTICAL" AnchorPane.bottomAnchor="15.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
       <Accordion fx:id="selectedAccordion" layoutX="486.0" AnchorPane.bottomAnchor="15.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="0.0">
         <panes>
           <TitledPane fx:id="selectedTP" animated="false" text="Selected">
@@ -255,7 +258,8 @@
                                       <AnchorPane fx:id="selectedAnchorPane" maxHeight="250.0" minHeight="250.0" minWidth="0.0" prefHeight="230.0" prefWidth="210.0">
                                              <children>
                                                 <ImageView fx:id="displayImageView" fitHeight="192.0" fitWidth="192.0" layoutX="-1.0" pickOnBounds="true" preserveRatio="true" smooth="false" AnchorPane.leftAnchor="19.0" AnchorPane.topAnchor="29.0" />
-                                             </children></AnchorPane>
+                                             </children>
+                                          </AnchorPane>
                                           <Button fx:id="disconnectSelBtn" mnemonicParsing="false" onAction="#disconnectSelected" prefHeight="25.0" prefWidth="210.0" styleClass="button-style-2" text="Disconnect Selected" GridPane.rowIndex="1">
                                              <GridPane.margin>
                                                 <Insets left="10.0" right="10.0" />
@@ -313,6 +317,11 @@
           </TitledPane>
         </panes>
       </Accordion>
-      <ScrollBar layoutX="6.0" layoutY="470.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
+      <ScrollBar layoutX="6.0" layoutY="470.0" max="1000.0" min="-1000.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
+      <AnchorPane fx:id="anchorPane" prefHeight="491.0" prefWidth="700.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <Rectangle fx:id="rect" arcHeight="5.0" arcWidth="5.0" fill="TRANSPARENT" height="1000.0" layoutX="222.0" layoutY="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="1000.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+         </children>
+      </AnchorPane>
    </children>
 </AnchorPane>

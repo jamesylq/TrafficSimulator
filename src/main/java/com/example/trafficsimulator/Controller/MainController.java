@@ -60,6 +60,9 @@ public class MainController implements Initializable {
     @FXML
     private LineChart<String, Number> lineChart;
 
+    @FXML
+    private Rectangle rect;
+
     public static Stage aboutPage;
     public static GraphEdge[][] dp;
 
@@ -145,10 +148,21 @@ public class MainController implements Initializable {
         mainSettingsGridPane = settingsGridPane;
         mainSelectedAnchorPane = selectedAnchorPane;
 
-        disableOnSimulate = new Node[] {disconnectSelBtn, deleteSelBtn, clearBtn, loadBtn, saveBtn, templateImg1, templateImg2, templateImg3, templateImg4, templateImg5};
+        rect.widthProperty().bind(anchorPane.widthProperty());
+        rect.heightProperty().bind(anchorPane.heightProperty());
+
+        disableOnSimulate = new Node[] {
+                disconnectSelBtn, deleteSelBtn, clearBtn, loadBtn, saveBtn,
+                templateImg1, templateImg2, templateImg3, templateImg4, templateImg5
+        };
 
         graphCB.getItems().addAll(graphStats);
         graphCB.getSelectionModel().selectFirst();
+
+        rect.setOnMouseClicked(e -> {
+            SelectHandler.deselect();
+            SelectHandler.display();
+        });
 
         anchorPane.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.ESCAPE) {
@@ -175,6 +189,17 @@ public class MainController implements Initializable {
             ClipboardContent content = new ClipboardContent();
             content.putImage(templateImg2.getImage());
             content.putString("img2");
+            db.setContent(content);
+
+            e.consume();
+        });
+
+        templateImg3.setOnDragDetected(e -> {
+            Dragboard db = templateImg3.startDragAndDrop(TransferMode.COPY);
+
+            ClipboardContent content = new ClipboardContent();
+            content.putImage(templateImg3.getImage());
+            content.putString("img3");
             db.setContent(content);
 
             e.consume();
@@ -260,10 +285,58 @@ public class MainController implements Initializable {
                         x.add(bezierRoad, y);
                         y.add(bezierRoad, x);
 
-                        m.setVisible(false);
-                        n.setVisible(false);
-
                         anchorPane.getChildren().addAll(bezierRoad.curves);
+                        updateLayers();
+
+                        e.setDropCompleted(true);
+                        e.consume();
+                        break;
+
+                    case "img3":
+                        final int RAD = 75;
+
+                        Intersection p = new Intersection(new Point(e.getX() + RAD, e.getY()));
+                        Intersection q = new Intersection(new Point(e.getX(), e.getY() + RAD));
+                        Intersection r = new Intersection(new Point(e.getX() - RAD, e.getY()));
+                        Intersection s = new Intersection(new Point(e.getX(), e.getY() - RAD));
+
+                        final double[] ANGLES = {
+                                Math.PI / 6, Math.PI / 3, 2 * Math.PI / 3, 5 * Math.PI / 6,
+                                7 * Math.PI / 6, 4 * Math.PI / 3, 5 * Math.PI / 3, 11 * Math.PI / 6
+                        };
+
+                        final ArrayList<Circle> CIRCLES = new ArrayList<>();
+                        for (int i = 0; i < 8; i++) CIRCLES.add(new Circle(
+                                e.getX() + Math.cos(ANGLES[i]) * RAD * 6 / 5,
+                                e.getY() + Math.sin(ANGLES[i]) * RAD * 6 / 5,
+                                20
+                        ));
+
+                        BezierRoad b1 = new BezierRoad(p, CIRCLES.get(0), CIRCLES.get(1), q);
+                        BezierRoad b2 = new BezierRoad(q, CIRCLES.get(2), CIRCLES.get(3), r);
+                        BezierRoad b3 = new BezierRoad(r, CIRCLES.get(4), CIRCLES.get(5), s);
+                        BezierRoad b4 = new BezierRoad(s, CIRCLES.get(6), CIRCLES.get(7), p);
+
+                        for (Shape shape: b1.curves) {
+                            if (!anchorPane.getChildren().contains(shape)) {
+                                anchorPane.getChildren().add(shape);
+                            }
+                        }
+                        for (Shape shape: b2.curves) {
+                            if (!anchorPane.getChildren().contains(shape)) {
+                                anchorPane.getChildren().add(shape);
+                            }
+                        }
+                        for (Shape shape: b3.curves) {
+                            if (!anchorPane.getChildren().contains(shape)) {
+                                anchorPane.getChildren().add(shape);
+                            }
+                        }
+                        for (Shape shape: b4.curves) {
+                            if (!anchorPane.getChildren().contains(shape)) {
+                                anchorPane.getChildren().add(shape);
+                            }
+                        }
                         updateLayers();
 
                         e.setDropCompleted(true);
@@ -338,6 +411,8 @@ public class MainController implements Initializable {
     }
 
     public void updateLayers() {
+        rect.toBack();
+
         if (!menuTP.isExpanded()) menuAccordion.toFront();
         if (!selectedTP.isExpanded()) selectedAccordion.toFront();
 
@@ -799,6 +874,18 @@ public class MainController implements Initializable {
                         if (random.nextInt(SPAWN_VEHICLE_RAND_NUM) == 0) {
                             Intersection start = Vehicle.generateTarget();
                             for (Road road: start.adjList.keySet()) {
+                                boolean blocked = false;
+                                ArrayList<RoadObject> roadObjs = (road.getStart() == start ? road.fwdObjects : road.bckObjects);
+
+                                for (RoadObject ro: roadObjs) {
+                                    if (ro instanceof Vehicle v) {
+                                        if (road.getDistance(0, v.roadRelPos) <= 30 + v.MAXSIDE / 2) blocked = true;
+                                        break;
+                                    }
+                                }
+
+                                if (blocked) break;
+
                                 if (random.nextInt(10) >= 3) {
                                     new Car(road, start);
                                 } else {

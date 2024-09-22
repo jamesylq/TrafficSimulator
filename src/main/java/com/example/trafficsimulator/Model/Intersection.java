@@ -55,6 +55,18 @@ public class Intersection {
     public void merge(Intersection intersection) {
         MainController.changeAllVehicleNode(intersection, this);
 
+        boolean hasTrafficLight = false;
+
+        if (!intersection.trafficLights.isEmpty()) {
+            hasTrafficLight = true;
+            while (!intersection.trafficLights.isEmpty()) intersection.trafficLights.getFirst().delete();
+        }
+
+        if (!this.trafficLights.isEmpty()) {
+            hasTrafficLight = true;
+            while (!this.trafficLights.isEmpty()) this.trafficLights.getFirst().delete();
+        }
+
         for (Map.Entry<Road, Intersection> adj: intersection.adjList.entrySet()) {
             Road road = adj.getKey();
             Intersection adjInt = adj.getValue();
@@ -72,6 +84,15 @@ public class Intersection {
 
         MainController.mainAnchorPane.getChildren().remove(intersection.circleObj);
         this.adjList.putAll(intersection.adjList);
+
+        if (hasTrafficLight) {
+            for (Road adj : this.adjList.keySet()) new TrafficLight(adj, this);
+            for (Road adj : this.adjList.keySet()) {
+                adj.fwdObjects.sort(Comparator.naturalOrder());
+                adj.bckObjects.sort(Comparator.reverseOrder());
+            }
+            TrafficLight.sync(this);
+        }
     }
 
     public void add(Road road, Intersection intersection) {

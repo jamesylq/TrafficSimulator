@@ -8,9 +8,8 @@ import javafx.scene.shape.*;
 import java.io.Serializable;
 import java.util.*;
 
-public class Intersection implements Serializable {
-    public int index = -1;
-
+public class Intersection {
+    public int index;
     private Point point;
     public Destination destinationObj = null;
     public Circle circleObj, borderCircleObj, borderCircleObj2;

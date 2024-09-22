@@ -12,10 +12,5 @@ public class Truck extends Vehicle {
 
         this.road = road;
         this.speed = speed;
-        this.name = "Truck";
     }
-
-//    public void iterate() {
-//
-//    }
 }

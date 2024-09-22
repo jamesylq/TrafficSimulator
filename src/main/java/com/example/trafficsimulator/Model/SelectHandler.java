@@ -123,10 +123,17 @@ public class SelectHandler implements EventHandler<MouseEvent> {
                     }
                 }
             }
+
+        } else if (MainController.selectedNode instanceof TrafficLight) {
+            MainController.mainDisplayImageView.setVisible(true);
+            MainController.mainDisplayImageView.setImage(
+                TrafficLight.TEXTURES_CLEAR[((TrafficLight) MainController.selectedNode).currState]
+            );
         }
     }
 
     public static void deselect() {
+        MainController.mainDisplayImageView.setVisible(false);
         if (MainController.selectedNode != null) {
             MainController.selectedNode.setSelect(false);
             MainController.mainAnchorPane.getChildren().remove(MainController.selectedHighlight);

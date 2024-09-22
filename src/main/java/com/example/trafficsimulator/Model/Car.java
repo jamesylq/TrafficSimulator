@@ -18,38 +18,39 @@ public class Car extends Vehicle {
             38, 20, false, false
     );
 
-    public Car(Road road, Intersection intersection) {
+    public Car(Road road) {
         super(road);
 
-        this.speed = DEFAULT_SPEED;
         this.WIDTH = 38;
         this.HEIGHT = 20;
-
         this.road = road;
-        this.name = "Car";
+
+        this.render = new ImageView(TEXTURE);
+        initRenderPane();
+        MainController.mainAnchorPane.getChildren().add(this.renderPane);
+    }
+
+    public Car(Road road, Intersection intersection) {
+        this(road);
+
+        this.speed = DEFAULT_SPEED;
 
         if (intersection == this.road.start) {
             this.prev = this.road.start;
             this.next = this.road.end;
 
             roadRelPos = 0;
-            road.fwdObjects.add(this);
-            road.fwdObjects.sort(Comparator.naturalOrder());
 
         } else {
             this.prev = this.road.end;
             this.next = this.road.start;
 
             roadRelPos = 1;
-            road.bckObjects.add(this);
-            road.bckObjects.sort(Comparator.reverseOrder());
         }
 
+        addToRoad();
         this.target = Vehicle.generateTarget(this.prev);
-        this.render = new ImageView(TEXTURE);
-        initRenderPane();
 
-        MainController.mainAnchorPane.getChildren().add(this.renderPane);
         updateRender();
     }
 }

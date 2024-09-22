@@ -9,6 +9,7 @@ import javafx.scene.shape.*;
 import java.util.*;
 
 public class TrafficLight extends RoadObject implements Iterable, Selectable {
+    public int index;
     public static final int RED_DURATION = 1000, YELLOW_DURATION = 100, GREEN_DURATION = 900;
     public static final int TICK_CYCLE = RED_DURATION + YELLOW_DURATION + GREEN_DURATION;
     public static final double ALPHA = Math.atan2(56, 26);
@@ -21,23 +22,27 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
         new Image(MainApplication.class.getResourceAsStream("Images/trafficLightRed.png"))
     };
 
+    public static final Image[] TEXTURES_CLEAR = {
+        new Image(MainApplication.class.getResourceAsStream("Images/trafficLightGreenClear.png")),
+        new Image(MainApplication.class.getResourceAsStream("Images/trafficLightYellowClear.png")),
+        new Image(MainApplication.class.getResourceAsStream("Images/trafficLightRedClear.png"))
+    };
+
     public static ArrayList<TrafficLight> trafficLightList = new ArrayList<>();
 
-    private int phase, tick;
+    public int phase, tick;
     public static int globalTick = 0;
     public int currState;
-    private Road road;
     public Intersection intersection;
     public double renderRoadRelPos, rx, ry;
     public boolean selected = false;
 
-    public ArrayList<Obstacle> obstacleObjects;
 
     public TrafficLight(Road road, Intersection intersection) {
-        this(road, intersection, (new Random()).nextDouble());
+        this(road, intersection, (int) ((new Random()).nextDouble() * TICK_CYCLE));
     }
 
-    public TrafficLight(Road road, Intersection intersection, double phase) {
+    public TrafficLight(Road road, Intersection intersection, int phase) {
         super(road);
 
         if (alreadyExists(road, intersection)) return;
@@ -46,7 +51,7 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
         HEIGHT = 60;
 
         this.road = road;
-        this.phase = (int) ((phase % 1.0) * TICK_CYCLE);
+        this.phase = phase;
         this.intersection = intersection;
         updateState();
 
@@ -101,6 +106,7 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
 
         if (tick == 0 || tick == GREEN_DURATION || tick == GREEN_DURATION + YELLOW_DURATION) {
             render.setImage(TEXTURES[updateState()]);
+            if (this.selected) SelectHandler.display();
         }
 
         updateRender();
@@ -128,7 +134,9 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
             highlight.getPoints().add(this.rx + Math.cos(angle + cornerAngle) * DIAG);
             highlight.getPoints().add(this.ry + Math.sin(angle + cornerAngle) * DIAG);
         }
-        highlight.setFill(Color.AQUA);
+        highlight.setFill(Color.TRANSPARENT);
+        highlight.setStroke(Color.AQUA);
+        highlight.setStrokeWidth(3);
 
         if (MainController.selectedHighlight != null) {
             MainController.mainAnchorPane.getChildren().remove(MainController.selectedHighlight);
@@ -137,6 +145,8 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
         MainController.mainAnchorPane.getChildren().add(highlight);
         MainController.selectedHighlight = highlight;
         MainController.selectedNode = this;
+
+        if (this.selected) SelectHandler.display();
     }
 
     public void setSelect(boolean b) {

@@ -4,10 +4,10 @@ import com.example.trafficsimulator.Controller.MainController;
 import com.example.trafficsimulator.MainApplication;
 import javafx.scene.image.*;
 
-import java.io.Serializable;
 import java.util.*;
 
-public class Destination implements Serializable {
+public class Destination {
+    public int index;
     public ImageView render;
     public Intersection intersection;
     public static final Image TEXTURE = new Image(

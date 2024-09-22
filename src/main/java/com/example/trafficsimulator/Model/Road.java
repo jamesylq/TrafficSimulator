@@ -1,18 +1,21 @@
 package com.example.trafficsimulator.Model;
 
-import java.io.Serializable;
 import java.util.*;
 
 import com.example.trafficsimulator.Controller.MainController;
 import javafx.scene.shape.*;
 
-public abstract class Road implements Iterable, Serializable {
-    public ArrayList<Shape> curves = new ArrayList<>();
-    protected double speed = 1.0, length, weight;
+public abstract class Road implements Iterable {
+    public int index;
+    public boolean selected = false;
+    public double speed = 1.0;
+    protected double length;
+    protected double weight;
+
     protected Intersection start, end;
     public ArrayList<RoadObject> fwdObjects = new ArrayList<>(), bckObjects = new ArrayList<>();
     public static ArrayList<Road> roadList = new ArrayList<>();
-    public boolean selected = false;
+    public ArrayList<Shape> curves = new ArrayList<>();
 
     Road() {
         roadList.add(this);
@@ -54,10 +57,6 @@ public abstract class Road implements Iterable, Serializable {
 
     public double getLength() {
         return this.length;
-    }
-
-    public double getSpeed() {
-        return this.speed;
     }
 
     public void iterate() {

@@ -4,11 +4,13 @@ import javafx.geometry.*;
 import javafx.scene.image.*;
 import javafx.scene.layout.*;
 
-import java.io.Serializable;
+import java.util.ArrayList;
 
-public abstract class RoadObject implements Comparable<RoadObject>, Serializable {
-    protected double roadRelPos = 0, WIDTH, HEIGHT, MAXSIDE;
+public abstract class RoadObject implements Comparable<RoadObject> {
+    public double roadRelPos = 0, WIDTH, HEIGHT, MAXSIDE;
     public boolean collidable = true;
+    public static ArrayList<RoadObject> roadObjectList;
+
     protected Point point;
     protected Road road;
     public ImageView render;

@@ -11,7 +11,6 @@ import javafx.scene.image.*;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.control.*;
-import javafx.scene.paint.*;
 import javafx.scene.shape.*;
 import javafx.stage.*;
 
@@ -33,7 +32,10 @@ public class MainController implements Initializable {
     public static ArrayList<Shape> permaFront = new ArrayList<>();
 
     @FXML
-    private Accordion accordion;
+    private Accordion menuAccordion, selectedAccordion;
+
+    @FXML
+    private TitledPane menuTP, selectedTP;
 
     @FXML
     private Hyperlink aboutHL;
@@ -42,7 +44,8 @@ public class MainController implements Initializable {
     private ImageView templateImg1, templateImg2, templateImg3, templateImg4, templateImg5;
 
     @FXML
-    private Button simulateBtn, disconnectRoadBtn, deleteRoadBtn;
+    private Button simulateBtn, disconnectRoadBtn, deleteRoadBtn, clearBtn, loadBtn, saveBtn;
+    public static Node[] disableOnSimulate;
 
     @FXML
     private Label settingL1, settingL2, settingL3, settingL4;
@@ -51,6 +54,10 @@ public class MainController implements Initializable {
     @FXML
     private Slider settingS1, settingS2, settingS3, settingS4;
     public static Slider MSS1, MSS2, MSS3, MSS4;
+
+    @FXML
+    private ImageView displayImageView;
+    public static ImageView mainDisplayImageView;
 
     public static Stage aboutPage;
     public static GraphEdge[][] dp;
@@ -74,6 +81,7 @@ public class MainController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         mainAnchorPane = anchorPane;
+        mainDisplayImageView = displayImageView;
         mainSelectedAnchorPane = selectedAnchorPane;
         MSL1 = settingL1;
         MSL2 = settingL2;
@@ -83,6 +91,8 @@ public class MainController implements Initializable {
         MSS2 = settingS2;
         MSS3 = settingS3;
         MSS4 = settingS4;
+
+        disableOnSimulate = new Node[] {disconnectRoadBtn, deleteRoadBtn, clearBtn, loadBtn, saveBtn, templateImg1, templateImg2, templateImg3, templateImg4, templateImg5};
 
         graphCB.getItems().addAll(graphStats);
         graphCB.getSelectionModel().selectFirst();
@@ -192,11 +202,7 @@ public class MainController implements Initializable {
                     case "img2":
                         Intersection x = new Intersection(new Point(e.getX() - 50, e.getY() - 60));
                         Circle m = new Circle(e.getX() + 70, e.getY() - 20, 20);
-                        m.setStroke(Color.AQUA);
-                        m.setStrokeWidth(5);
                         Circle n = new Circle(e.getX() - 70, e.getY() + 20, 20);
-                        n.setStroke(Color.AQUA);
-                        n.setStrokeWidth(5);
                         Intersection y = new Intersection(new Point(e.getX() + 50, e.getY() + 60));
                         BezierRoad bezierRoad = new BezierRoad(x, m, n, y);
                         x.add(bezierRoad, y);
@@ -276,7 +282,9 @@ public class MainController implements Initializable {
     }
 
     public void updateLayers() {
-        accordion.toFront();
+        if (!menuTP.isExpanded()) menuAccordion.toFront();
+        if (!selectedTP.isExpanded()) selectedAccordion.toFront();
+
         for (Intersection intersection: Intersection.intersectionList) intersection.borderCircleObj.toFront();
         for (Road road: Road.roadList) road.curves.get(2).toFront();
         for (Road road: Road.roadList) road.curves.get(3).toFront();
@@ -285,6 +293,9 @@ public class MainController implements Initializable {
         for (Intersection intersection: Destination.destinationList) intersection.destinationObj.render.toFront();
         draggableNodesToFront();
         for (Shape shape: permaFront) shape.toFront();
+
+        if (menuTP.isExpanded()) menuAccordion.toFront();
+        if (selectedTP.isExpanded()) selectedAccordion.toFront();
     }
 
     public static void draggableNodesToFront() {
@@ -323,14 +334,18 @@ public class MainController implements Initializable {
     protected void toggleSimulate() {
         if (isSimulating) {
             simulateBtn.setText("Begin Simulation");
-            disconnectRoadBtn.setVisible(true);
-            deleteRoadBtn.setVisible(true);
+            for (Node dn: disableOnSimulate) dn.setDisable(false);
 
             for (Intersection intersection: Intersection.intersectionList) {
                 intersection.circleObj.setVisible(true);
             }
 
         } else {
+            if (Destination.destinationList.size() < 2) {
+                alertError("Invalid Layout!", "Too little destinations!", "At least 2 destinations are required to be placed on intersections!");
+                return;
+            }
+
             final int N = Intersection.intersectionList.size();
 
             dp = new GraphEdge[N][N];
@@ -377,8 +392,7 @@ public class MainController implements Initializable {
             }
 
             simulateBtn.setText("End Simulation");
-            disconnectRoadBtn.setVisible(false);
-            deleteRoadBtn.setVisible(false);
+            for (Node dn: disableOnSimulate) dn.setDisable(true);
 
             for (Intersection intersection: Intersection.intersectionList) {
                 intersection.circleObj.setVisible(false);
@@ -503,31 +517,105 @@ public class MainController implements Initializable {
     @FXML
     public void saveGraph() {
         try {
-            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("save.txt"));
-//            out.writeObject(new Arrangement(
-//                    Vehicle.vehicleList,
-//                    Road.roadList,
-//                    TrafficLight.trafficLightList,
-//                    Destination.destinationList,
-//                    Intersection.intersectionList
-//            ));
+            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("savefiles/save.txt"));
+            out.writeObject(new Arrangement());
             out.close();
+
+            IntersectionWrapper.processedIntersections.clear();
+            RoadWrapper.processedRoads.clear();
+            VehicleWrapper.processedVehicles.clear();
+            TrafficLightWrapper.processedTrafficLights.clear();
+            DestinationWrapper.processedDestinations.clear();
             
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    public static Road roadAt(RoadWrapper roadWrap) {
+        return Road.roadList.get(roadWrap.index);
+    }
+
+    public static Intersection intAt(IntersectionWrapper intWrap) {
+        return Intersection.intersectionList.get(intWrap.index);
+    }
+
     @FXML
     public void loadGraph() {
+        clearGraph();
+
         try {
-            ObjectInputStream input = new ObjectInputStream(new FileInputStream("save.txt"));
+            ObjectInputStream input = new ObjectInputStream(new FileInputStream("savefiles/save.txt"));
             Arrangement arrangement = (Arrangement) input.readObject();
-            Vehicle.vehicleList = arrangement.vehicleList;
-            Road.roadList = arrangement.roadList;
-            TrafficLight.trafficLightList = arrangement.trafficLightlist;
-            Destination.destinationList = arrangement.destinationList;
-            Intersection.intersectionList = arrangement.intersectionList;
+            input.close();
+
+            for (IntersectionWrapper intWrap: arrangement.intersectionList) {
+                new Intersection(intWrap.point);
+            }
+
+            for (RoadWrapper roadWrap: arrangement.roadList) {
+                Road road = null;
+
+                if (roadWrap instanceof BezierRoadWrapper bezier) {
+                    road = new BezierRoad(
+                        intAt(bezier.start),
+                        new Circle(bezier.weightStart.getX(), bezier.weightStart.getY(), 20),
+                        new Circle(bezier.weightEnd.getX(), bezier.weightEnd.getY(), 20),
+                        intAt(bezier.end)
+                    );
+
+                } else if (roadWrap instanceof LinearRoadWrapper linear) {
+                    road = new LinearRoad(intAt(linear.start), intAt(linear.end));
+                }
+
+                road.speed = roadWrap.speed;
+                for (Shape shape: road.curves) {
+                    if (!anchorPane.getChildren().contains(shape)) {
+                        anchorPane.getChildren().add(shape);
+                    }
+                }
+            }
+
+            for (int i = 0; i < arrangement.intersectionList.size(); i++) {
+                IntersectionWrapper intWrap = arrangement.intersectionList.get(i);
+                for (Map.Entry<RoadWrapper, IntersectionWrapper> entry: intWrap.adjList.entrySet()) {
+                    Intersection.intersectionList.get(i).adjList.put(roadAt(entry.getKey()), intAt(entry.getValue()));
+                }
+            }
+
+            for (int i = 0; i < arrangement.vehicleList.size(); i++) {
+                VehicleWrapper vWrap = arrangement.vehicleList.get(i);
+                Vehicle vehicle = null;
+
+                if (vWrap instanceof CarWrapper carWrap) {
+                    vehicle = new Car(roadAt(carWrap.road));
+                }
+
+                vehicle.prev = intAt(vWrap.prev);
+                vehicle.next = intAt(vWrap.next);
+                vehicle.target = intAt(vWrap.target);
+                vehicle.roadRelPos = vWrap.roadRelPos;
+
+                vehicle.speed = vWrap.speed;
+                vehicle.getPoint();
+                vehicle.addToRoad();
+            }
+
+            for (DestinationWrapper destWrap: arrangement.destinationList) {
+                new Destination(intAt(destWrap.intersection));
+            }
+
+            for (TrafficLightWrapper tlWrap: arrangement.trafficLightList) {
+                new TrafficLight(roadAt(tlWrap.road), intAt(tlWrap.intersection));
+            }
+
+            updateLayers();
+
+            IntersectionWrapper.processedIntersections.clear();
+            RoadWrapper.processedRoads.clear();
+            VehicleWrapper.processedVehicles.clear();
+            TrafficLightWrapper.processedTrafficLights.clear();
+            DestinationWrapper.processedDestinations.clear();
 
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();

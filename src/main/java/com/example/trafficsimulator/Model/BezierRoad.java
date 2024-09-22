@@ -21,7 +21,14 @@ public class BezierRoad extends Road implements Selectable {
         bezierRoadList.add(this);
 
         this.weightStart = weightStart;
+        this.weightStart.setStroke(Color.AQUA);
+        this.weightStart.setStrokeWidth(5);
+        this.weightStart.setVisible(false);
+
         this.weightEnd = weightEnd;
+        this.weightEnd.setStroke(Color.AQUA);
+        this.weightEnd.setStrokeWidth(5);
+        this.weightEnd.setVisible(false);
 
         weights.add(this.weightStart);
         weights.add(this.weightEnd);
@@ -33,6 +40,8 @@ public class BezierRoad extends Road implements Selectable {
             content.putString("bezierWeight");
             db.setContent(content);
 
+            if (this.selected) SelectHandler.display();
+
             e.consume();
         });
 
@@ -42,6 +51,8 @@ public class BezierRoad extends Road implements Selectable {
             ClipboardContent content = new ClipboardContent();
             content.putString("bezierWeight");
             db.setContent(content);
+
+            if (this.selected) SelectHandler.display();
 
             e.consume();
         });

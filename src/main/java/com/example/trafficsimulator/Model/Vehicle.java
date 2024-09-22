@@ -7,8 +7,8 @@ import javafx.scene.shape.*;
 import java.util.*;
 
 public abstract class Vehicle extends RoadObject implements Iterable, Selectable {
-    protected String name;
-    protected double speed;
+    public int index;
+    public double speed;
     public Intersection target, prev, next;
     public static ArrayList<Vehicle> vehicleList = new ArrayList<>();
     public boolean selected, deleted = false;
@@ -179,6 +179,17 @@ public abstract class Vehicle extends RoadObject implements Iterable, Selectable
             }
             cur = graphEdge.adj;
         }
+    }
+
+    public void addToRoad() {
+        if (isFwd()) {
+            this.road.fwdObjects.add(this);
+            this.road.fwdObjects.sort(Comparator.naturalOrder());
+        } else {
+            this.road.bckObjects.add(this);
+            this.road.bckObjects.sort(Comparator.reverseOrder());
+        }
+
     }
 
     public static double bound(double x) {

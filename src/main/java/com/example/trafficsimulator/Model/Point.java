@@ -2,7 +2,9 @@ package com.example.trafficsimulator.Model;
 
 import javafx.scene.shape.*;
 
-public class Point {
+import java.io.Serializable;
+
+public class Point implements Serializable {
     private double x, y;
 
     public Point(double x, double y) {

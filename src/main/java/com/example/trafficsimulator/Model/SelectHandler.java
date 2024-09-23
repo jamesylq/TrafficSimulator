@@ -5,6 +5,7 @@ import com.example.trafficsimulator.Controller.MainController;
 import javafx.event.*;
 import javafx.scene.image.*;
 import javafx.scene.input.*;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 
 import java.util.*;

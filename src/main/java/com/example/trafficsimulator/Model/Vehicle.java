@@ -96,6 +96,8 @@ public abstract class Vehicle extends RoadObject implements Iterable, Selectable
     }
 
     public void updateRender() {
+        if (this.selected) this.onSelect();
+
         Point der = this.road.derivative(this.roadRelPos);
         final double SIN = der.getY();
         final double COS = der.getX();

@@ -659,8 +659,8 @@ public class MainController implements Initializable {
     @FXML
     public void saveGraph() {
         try {
-            String filename = String.format("%s.txt", DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now()));
-            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("savefiles/" + filename));
+            String filename = String.format("%s.tsim.txt", DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now()));
+            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(System.getProperty("user.dir") + "/savefiles/" + filename));
             out.writeObject(new Arrangement());
             out.close();
 
@@ -687,12 +687,10 @@ public class MainController implements Initializable {
 
     @FXML
     public void loadGraph() {
-        clearGraph();
-
         try {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Select Savefile");
-            fileChooser.setInitialDirectory(new File("savefiles"));
+            fileChooser.setInitialDirectory(new File(System.getProperty("user.dir") + "/savefiles"));
             fileChooser.getExtensionFilters().add(new ExtensionFilter("Text Files", "*.txt"));
             File selectedFile = fileChooser.showOpenDialog(anchorPane.getScene().getWindow());
 
@@ -700,6 +698,17 @@ public class MainController implements Initializable {
                 alertError("File Selection Error!", "No file selected!", "Try selecting a TrafficSimulator .txt save file!");
                 return;
             }
+
+            if (!selectedFile.getName().matches("\\d{8}-\\d{6}\\.tsim\\.txt")) {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Confirm Operation?");
+                alert.setHeaderText("This savefile seems to have been renamed, and its contents could have been modified.");
+                alert.setContentText("Are you sure you want to open this file? Doing so will erase all your current progress.");
+                alert.showAndWait();
+                if (alert.getResult() == ButtonType.CANCEL) return;
+            }
+
+            clearGraph();
 
             ObjectInputStream input = new ObjectInputStream(new FileInputStream(selectedFile));
             Arrangement arrangement = (Arrangement) input.readObject();
@@ -833,7 +842,7 @@ public class MainController implements Initializable {
 
     public void tick() {
         Platform.runLater(() -> {
-            if (new File("savefiles").mkdirs()) {
+            if (new File(System.getProperty("user.dir") + "/savefiles").mkdirs()) {
                 alertInfo("Directory created!", "Directory \"savefiles\" generated!", "This will be the location where your savefiles read and write to.");
             }
         });
@@ -905,6 +914,39 @@ public class MainController implements Initializable {
                         Vehicle.vehicleList = remVehicles;
                     });
 
+                    ticksSinceStart++;
+                    if (++SINCE_LAST_UPDATE_CHART >= FPS / 2) {
+                        SINCE_LAST_UPDATE_CHART = 0;
+                        if (avgSpeed >= 0) avgSpeedHist.add(avgSpeed);
+                        tripRateHist.add((double) tripsMade * FPS / ticksSinceStart * 60);
+
+                        if (avgSpeedHist.size() > 20) avgSpeedHist.removeFirst();
+                        if (tripRateHist.size() > 20) tripRateHist.removeFirst();
+
+                        Platform.runLater(() -> {
+                            lineChart.getData().clear();
+                            XYChart.Series<String, Number> series = new XYChart.Series<>();
+                            int ind = graphCB.getSelectionModel().getSelectedIndex();
+                            StringBuilder str = new StringBuilder(String.format("Current %s: ", graphStats[ind]));
+
+                            if (ind == 0) {
+                                for (int i = 0; i < tripRateHist.size(); i++) {
+                                    series.getData().add(new XYChart.Data<>(Integer.toString(i), tripRateHist.get(i)));
+                                }
+                                str.append(String.format("%.2f", tripRateHist.getLast()));
+
+                            } else {
+                                for (int i = 0; i < avgSpeedHist.size(); i++) {
+                                    series.getData().add(new XYChart.Data<>(Integer.toString(i), avgSpeedHist.get(i)));
+                                }
+                                str.append(String.format("%.2f", avgSpeedHist.getLast()));
+                            }
+
+                            graphTA.setText(str.toString());
+                            lineChart.getData().add(series);
+                        });
+                    }
+
                 } else {
                     Platform.runLater(() -> {
                         deleteSelBtn.setDisable(selectedNode == null);
@@ -913,39 +955,6 @@ public class MainController implements Initializable {
                         for (Vehicle vehicle: Vehicle.vehicleList) vehicle.updateRender();
                         for (TrafficLight trafficLight: TrafficLight.trafficLightList) trafficLight.updateRender();
                         updateLayers();
-                    });
-                }
-
-                ticksSinceStart++;
-                if (++SINCE_LAST_UPDATE_CHART >= FPS / 2) {
-                    SINCE_LAST_UPDATE_CHART = 0;
-                    if (avgSpeed >= 0) avgSpeedHist.add(avgSpeed);
-                    tripRateHist.add((double) tripsMade * FPS / ticksSinceStart * 60);
-
-                    if (avgSpeedHist.size() > 20) avgSpeedHist.removeFirst();
-                    if (tripRateHist.size() > 20) tripRateHist.removeFirst();
-
-                    Platform.runLater(() -> {
-                        lineChart.getData().clear();
-                        XYChart.Series<String, Number> series = new XYChart.Series<>();
-                        int ind = graphCB.getSelectionModel().getSelectedIndex();
-                        StringBuilder str = new StringBuilder(String.format("Current %s: ", graphStats[ind]));
-
-                        if (ind == 0) {
-                            for (int i = 0; i < tripRateHist.size(); i++) {
-                                series.getData().add(new XYChart.Data<>(Integer.toString(i), tripRateHist.get(i)));
-                            }
-                            str.append(String.format("%.2f", tripRateHist.getLast()));
-
-                        } else {
-                            for (int i = 0; i < avgSpeedHist.size(); i++) {
-                                series.getData().add(new XYChart.Data<>(Integer.toString(i), avgSpeedHist.get(i)));
-                            }
-                            str.append(String.format("%.2f", avgSpeedHist.getLast()));
-                        }
-
-                        graphTA.setText(str.toString());
-                        lineChart.getData().add(series);
                     });
                 }
 

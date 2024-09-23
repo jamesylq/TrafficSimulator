@@ -317,6 +317,15 @@ public class MainController implements Initializable {
                         BezierRoad b3 = new BezierRoad(r, CIRCLES.get(4), CIRCLES.get(5), s);
                         BezierRoad b4 = new BezierRoad(s, CIRCLES.get(6), CIRCLES.get(7), p);
 
+                        p.add(b4, s);
+                        p.add(b1, q);
+                        q.add(b1, p);
+                        q.add(b2, r);
+                        r.add(b2, q);
+                        r.add(b3, s);
+                        s.add(b3, r);
+                        s.add(b4, p);
+
                         for (Shape shape: b1.curves) {
                             if (!anchorPane.getChildren().contains(shape)) {
                                 anchorPane.getChildren().add(shape);

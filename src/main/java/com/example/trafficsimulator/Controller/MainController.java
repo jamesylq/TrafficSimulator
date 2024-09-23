@@ -714,6 +714,8 @@ public class MainController implements Initializable {
             Arrangement arrangement = (Arrangement) input.readObject();
             input.close();
 
+            alertInfo("File Loaded!", "Savefile successfully loaded!", "Your savefile has been loaded!");
+
             for (IntersectionWrapper intWrap: arrangement.intersectionList) {
                 new Intersection(intWrap.point);
             }

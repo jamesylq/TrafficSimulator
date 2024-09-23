@@ -83,18 +83,18 @@ public abstract class Road implements Iterable, Selectable {
 
         for (RoadObject ro: fwdObjects) {
             if (ro instanceof Vehicle v) {
-                if (v.speed >= 0) {
+                if (v.currSpeed >= 0) {
                     numv++;
-                    sumSpeed += v.speed;
+                    sumSpeed += v.currSpeed;
                 }
             }
         }
 
         for (RoadObject ro: bckObjects) {
             if (ro instanceof Vehicle v) {
-                if (v.speed >= 0) {
+                if (v.currSpeed >= 0) {
                     numv++;
-                    sumSpeed += v.speed;
+                    sumSpeed += v.currSpeed;
                 }
             }
         }

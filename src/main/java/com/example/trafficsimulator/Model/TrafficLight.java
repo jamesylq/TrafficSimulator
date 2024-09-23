@@ -35,7 +35,6 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
     public static long globalTick = 0;
     public int currState;
     public Intersection intersection;
-    public double rx, ry;
     public boolean selected = false;
     public static final Random random = new Random();
     public final ArrayList<Obstacle> obstacles = new ArrayList<>();
@@ -104,8 +103,8 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
 
         this.render.setRotate(this.road.getAngle(this.roadRelPos) * 180 / Math.PI);
 
-        this.renderPane.setLayoutX((this.rx = this.road.getPoint(this.roadRelPos).getX()) - MAXSIDE / 2);
-        this.renderPane.setLayoutY((this.ry = this.road.getPoint(this.roadRelPos).getY()) - MAXSIDE / 2);
+        this.renderPane.setLayoutX(this.road.getPoint(this.roadRelPos).getX() - MAXSIDE / 2);
+        this.renderPane.setLayoutY(this.road.getPoint(this.roadRelPos).getY() - MAXSIDE / 2);
 
         if (this.selected) onSelect();
     }
@@ -158,8 +157,8 @@ public class TrafficLight extends RoadObject implements Iterable, Selectable {
         Polygon highlight = new Polygon();
         final double angle = this.road.getAngle(this.roadRelPos);
         for (double cornerAngle: CORNERANGLES) {
-            highlight.getPoints().add(this.rx + Math.cos(angle + cornerAngle) * DIAG);
-            highlight.getPoints().add(this.ry + Math.sin(angle + cornerAngle) * DIAG);
+            highlight.getPoints().add(this.getX() + Math.cos(angle + cornerAngle) * DIAG);
+            highlight.getPoints().add(this.getY() + Math.sin(angle + cornerAngle) * DIAG);
         }
         highlight.setFill(Color.TRANSPARENT);
         highlight.setStroke(Color.AQUA);

@@ -657,6 +657,34 @@ public class MainController implements Initializable {
     }
 
     @FXML
+    public void updateGraph() {
+        Platform.runLater(() -> {
+            lineChart.getData().clear();
+            XYChart.Series<String, Number> series = new XYChart.Series<>();
+            int ind = graphCB.getSelectionModel().getSelectedIndex();
+            StringBuilder str = new StringBuilder(String.format("Current %s: ", graphStats[ind]));
+
+            if (ind == 0) {
+                if (tripRateHist.isEmpty()) return;
+                for (int i = 0; i < tripRateHist.size(); i++) {
+                    series.getData().add(new XYChart.Data<>(Integer.toString(i), tripRateHist.get(i)));
+                }
+                str.append(String.format("%.2f", tripRateHist.getLast()));
+
+            } else {
+                if (avgSpeedHist.isEmpty()) return;
+                for (int i = 0; i < avgSpeedHist.size(); i++) {
+                    series.getData().add(new XYChart.Data<>(Integer.toString(i), avgSpeedHist.get(i)));
+                }
+                str.append(String.format("%.2f", avgSpeedHist.getLast()));
+            }
+
+            graphTA.setText(str.toString());
+            lineChart.getData().add(series);
+        });
+    }
+
+    @FXML
     public void saveGraph() {
         try {
             String filename = String.format("%s.tsim.txt", DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now()));
@@ -925,28 +953,7 @@ public class MainController implements Initializable {
                         if (avgSpeedHist.size() > 20) avgSpeedHist.removeFirst();
                         if (tripRateHist.size() > 20) tripRateHist.removeFirst();
 
-                        Platform.runLater(() -> {
-                            lineChart.getData().clear();
-                            XYChart.Series<String, Number> series = new XYChart.Series<>();
-                            int ind = graphCB.getSelectionModel().getSelectedIndex();
-                            StringBuilder str = new StringBuilder(String.format("Current %s: ", graphStats[ind]));
-
-                            if (ind == 0) {
-                                for (int i = 0; i < tripRateHist.size(); i++) {
-                                    series.getData().add(new XYChart.Data<>(Integer.toString(i), tripRateHist.get(i)));
-                                }
-                                str.append(String.format("%.2f", tripRateHist.getLast()));
-
-                            } else {
-                                for (int i = 0; i < avgSpeedHist.size(); i++) {
-                                    series.getData().add(new XYChart.Data<>(Integer.toString(i), avgSpeedHist.get(i)));
-                                }
-                                str.append(String.format("%.2f", avgSpeedHist.getLast()));
-                            }
-
-                            graphTA.setText(str.toString());
-                            lineChart.getData().add(series);
-                        });
+                        updateGraph();
                     }
 
                 } else {

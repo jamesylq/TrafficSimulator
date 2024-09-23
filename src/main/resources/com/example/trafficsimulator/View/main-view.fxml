@@ -24,8 +24,9 @@
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minHeight="400.0" minWidth="700.0" prefHeight="491.0" prefWidth="700.0" style="-fx-background-color: #666666;" stylesheets="@../style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.trafficsimulator.Controller.MainController">
+<AnchorPane fx:id="anchorPane" maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minHeight="400.0" minWidth="700.0" prefHeight="491.0" prefWidth="700.0" style="-fx-background-color: #666666;" stylesheets="@../style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.trafficsimulator.Controller.MainController">
    <children>
+      <Rectangle fx:id="rect" arcHeight="5.0" arcWidth="5.0" fill="TRANSPARENT" height="1000.0" stroke="TRANSPARENT" strokeType="INSIDE" width="1000.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
       <Accordion fx:id="menuAccordion" maxWidth="250.0" prefHeight="400.0" prefWidth="250.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
         <panes>
           <TitledPane fx:id="menuTP" animated="false" text="Menu">
@@ -214,7 +215,7 @@
                                                 <Insets />
                                              </GridPane.margin>
                                           </TextArea>
-                                          <ComboBox fx:id="graphCB" prefHeight="25.0" prefWidth="288.0" GridPane.rowIndex="1">
+                                          <ComboBox fx:id="graphCB" onAction="#updateGraph" prefHeight="25.0" prefWidth="288.0" GridPane.rowIndex="1">
                                              <GridPane.margin>
                                                 <Insets bottom="10.0" left="5.0" right="5.0" />
                                              </GridPane.margin>
@@ -231,7 +232,7 @@
           </TitledPane>
         </panes>
       </Accordion>
-      <Accordion fx:id="selectedAccordion" layoutX="486.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <Accordion fx:id="selectedAccordion" layoutX="445.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <panes>
           <TitledPane fx:id="selectedTP" animated="false" text="Selected">
             <content>
@@ -314,10 +315,5 @@
           </TitledPane>
         </panes>
       </Accordion>
-      <AnchorPane fx:id="anchorPane" prefHeight="491.0" prefWidth="700.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-         <children>
-            <Rectangle fx:id="rect" arcHeight="5.0" arcWidth="5.0" fill="TRANSPARENT" height="1000.0" layoutX="222.0" layoutY="30.0" stroke="TRANSPARENT" strokeType="INSIDE" width="1000.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-         </children>
-      </AnchorPane>
    </children>
 </AnchorPane>
